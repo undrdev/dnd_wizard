@@ -1,9 +1,25 @@
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useAppStore } from '@/stores/useAppStore';
 import { CampaignService, LocationService, NPCService, QuestService } from '@/lib/firestore';
-import { CampaignMap } from '@/components/map/CampaignMap';
 import { CampaignSidebar } from './CampaignSidebar';
 import { ImportExportModal } from './ImportExportModal';
+
+// Dynamically import the map component to avoid SSR issues with Leaflet
+const CampaignMap = dynamic(
+  () => import('@/components/map/CampaignMap').then(mod => ({ default: mod.CampaignMap })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-full w-full flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <p className="text-gray-600">Loading map...</p>
+        </div>
+      </div>
+    )
+  }
+);
 
 export function CampaignDashboard() {
   const {

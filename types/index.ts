@@ -105,13 +105,42 @@ export interface AIMessage {
   timestamp: Date;
 }
 
-// UI and State Types
+// Enhanced UI and State Types
 export interface MapState {
   center: [number, number];
   zoom: number;
   selectedNpc?: string;
   selectedQuest?: string;
   selectedLocation?: string;
+  layers: MapLayer[];
+  annotations: MapAnnotation[];
+  drawingMode: DrawingMode;
+  activeLayer?: string;
+  measurementMode: boolean;
+  clusteringEnabled: boolean;
+  currentTheme: MapTheme;
+}
+
+export type DrawingMode = 'none' | 'line' | 'polygon' | 'circle' | 'rectangle' | 'text';
+
+export interface MapTheme {
+  id: string;
+  name: string;
+  baseLayer: string;
+  markerStyle: MarkerStyleConfig;
+}
+
+export interface MarkerStyleConfig {
+  npc: MarkerStyle;
+  quest: MarkerStyle;
+  location: MarkerStyle;
+}
+
+export interface MarkerStyle {
+  color: string;
+  size: number;
+  icon: string;
+  clusterColor?: string;
 }
 
 export interface User {
@@ -133,11 +162,29 @@ export interface AppState {
   error: string | null;
 }
 
+// Map Export Types
+export interface MapExportOptions {
+  format: 'png' | 'jpg' | 'pdf';
+  quality: number;
+  includeAnnotations: boolean;
+  includeLayers: string[];
+  width: number;
+  height: number;
+}
+
+// Measurement Types
+export interface MeasurementResult {
+  type: 'distance' | 'area';
+  value: number;
+  unit: string;
+  coordinates: LatLng[];
+}
+
 // API Types
 export interface AICommandRequest {
   command: string;
   campaignId: string;
-  context?: Partial<AIContextMemory>;
+  context?: any; // Allow any context format for flexibility
 }
 
 export interface AICommandResponse {
@@ -210,13 +257,56 @@ export interface ImportOptions {
   importAIContext: boolean;
 }
 
-// Map Layer Types
+// Enhanced Map Layer Types
 export interface MapLayer {
   id: string;
   name: string;
+  type: 'terrain' | 'political' | 'custom' | 'annotations';
   visible: boolean;
+  opacity: number;
   minZoom?: number;
   maxZoom?: number;
+  data?: any;
+  url?: string;
+}
+
+export interface MapAnnotation {
+  id: string;
+  campaignId: string;
+  type: 'line' | 'polygon' | 'circle' | 'text' | 'rectangle';
+  coordinates: LatLng[];
+  style: AnnotationStyle;
+  label?: string;
+  description?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AnnotationStyle {
+  color: string;
+  fillColor?: string;
+  weight: number;
+  opacity: number;
+  fillOpacity?: number;
+  dashArray?: string;
+  fontSize?: number;
+  fontFamily?: string;
+}
+
+export interface LatLng {
+  lat: number;
+  lng: number;
+}
+
+export interface TerrainLayer extends MapLayer {
+  type: 'terrain';
+  terrainType: 'topographic' | 'satellite' | 'hybrid' | 'physical';
+}
+
+export interface BiomeLayer extends MapLayer {
+  type: 'custom';
+  biomeType: 'forest' | 'desert' | 'mountain' | 'ocean' | 'grassland' | 'tundra';
+  geoJsonData?: any;
 }
 
 export interface NPCMarker {

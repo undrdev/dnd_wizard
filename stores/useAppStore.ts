@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
+import { DEFAULT_MAP_THEMES } from '@/lib/mapThemes';
 import type {
   AppState,
   Campaign,
@@ -8,6 +9,9 @@ import type {
   Quest,
   User,
   MapState,
+  MapLayer,
+  MapAnnotation,
+  DrawingMode,
 } from '@/types';
 
 interface AppStore extends AppState {
@@ -78,6 +82,13 @@ const initialState: AppState = {
     selectedNpc: undefined,
     selectedQuest: undefined,
     selectedLocation: undefined,
+    layers: [],
+    annotations: [],
+    drawingMode: 'none',
+    activeLayer: undefined,
+    measurementMode: false,
+    clusteringEnabled: true,
+    currentTheme: DEFAULT_MAP_THEMES[0],
   },
   isLoading: false,
   error: null,
