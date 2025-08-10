@@ -1,5 +1,6 @@
 import { Request, Response } from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { parseCommand, parseAIResponse } from '../../../lib/aiParsers';
 
 const db = admin.firestore();
 
@@ -23,26 +24,33 @@ export async function generateContent(req: Request, res: Response) {
 
     // Get campaign context
     const context = await getCampaignContext(campaignId);
-    
-    // Generate content based on provider
+
+    // Parse the command for better understanding
+    const parsedCommand = parseCommand(prompt, context);
+
+    // Generate content based on provider with enhanced context
     let result;
     switch (provider) {
       case 'openai':
-        result = await generateWithOpenAI(prompt, context);
+        result = await generateWithOpenAIEnhanced(prompt, context, parsedCommand);
         break;
       case 'anthropic':
-        result = await generateWithAnthropic(prompt, context);
+        result = await generateWithAnthropicEnhanced(prompt, context, parsedCommand);
         break;
       default:
         return res.status(400).json({ error: 'Unsupported AI provider' });
     }
 
-    // Update AI context memory
-    await updateAIContext(campaignId, prompt, result);
+    // Parse and validate the AI response
+    const parsedResult = parseAIResponse(result);
+
+    // Update AI context memory with both user prompt and AI response
+    await updateAIContext(campaignId, prompt, parsedResult);
 
     return res.status(200).json({
       success: true,
-      data: result,
+      data: parsedResult,
+      command: parsedCommand, // Include parsed command for debugging
     });
   } catch (error) {
     console.error('Error generating content:', error);
@@ -88,6 +96,38 @@ async function generateWithAnthropic(prompt: string, context: any) {
     quests: [],
     locations: [],
   };
+}
+
+async function generateWithOpenAIEnhanced(prompt: string, context: any, command: any): Promise<string> {
+  // This would use the same enhanced system prompt logic as the client-side AI service
+  // For now, delegate to the existing function but with enhanced prompting
+  const enhancedPrompt = buildEnhancedPrompt(prompt, context, command);
+  return generateWithOpenAI(enhancedPrompt, context);
+}
+
+async function generateWithAnthropicEnhanced(prompt: string, context: any, command: any): Promise<string> {
+  // This would use the same enhanced system prompt logic as the client-side AI service
+  // For now, delegate to the existing function but with enhanced prompting
+  const enhancedPrompt = buildEnhancedPrompt(prompt, context, command);
+  return generateWithAnthropic(enhancedPrompt, context);
+}
+
+function buildEnhancedPrompt(prompt: string, context: any, command: any): string {
+  let enhancedPrompt = `COMMAND TYPE: ${command.type}
+CONFIDENCE: ${(command.confidence * 100).toFixed(0)}%
+PARAMETERS: ${JSON.stringify(command.parameters)}
+
+ORIGINAL REQUEST: ${prompt}
+
+CONTEXT SUMMARY:
+- Campaign: ${context.campaign?.title || 'Unknown'}
+- Locations: ${context.locations?.length || 0}
+- NPCs: ${context.npcs?.length || 0}
+- Quests: ${context.quests?.length || 0}
+
+Please respond with structured JSON containing the requested content that fits seamlessly with the existing campaign elements.`;
+
+  return enhancedPrompt;
 }
 
 async function updateAIContext(campaignId: string, userMessage: string, aiResponse: any) {

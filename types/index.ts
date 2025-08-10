@@ -124,9 +124,16 @@ export interface AICommandResponse {
     npcs?: NPC[];
     quests?: Quest[];
     locations?: Location[];
+    suggestions?: string[];
+    followUpQuestions?: string[];
     message?: string;
   };
   error?: string;
+  command?: {
+    type: string;
+    confidence: number;
+    parameters: Record<string, any>;
+  };
 }
 
 export interface CampaignExport {
