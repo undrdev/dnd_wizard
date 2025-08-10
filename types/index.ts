@@ -50,6 +50,28 @@ export interface Quest {
   notes?: string;
 }
 
+// Enhanced Quest interface for Agent 3
+export interface EnhancedQuest extends Quest {
+  dependencies: string[]; // Quest IDs that must be completed first
+  milestones: QuestMilestone[];
+  xpReward: number;
+  goldReward: number;
+  itemRewards: string[];
+  completedAt?: Date;
+  playerNotes: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface QuestMilestone {
+  id: string;
+  title: string;
+  description: string;
+  completed: boolean;
+  completedAt?: Date;
+  order: number;
+}
+
 export interface AIContextMemory {
   campaignId: string;
   tokens: string[];
@@ -164,6 +186,67 @@ export interface QuestFormData {
   rewards?: string;
 }
 
+// Enhanced Quest Form Data for Agent 3
+export interface EnhancedQuestFormData {
+  title: string;
+  description: string;
+  importance: Quest['importance'];
+  status: Quest['status'];
+  startNpcId: string;
+  involvedNpcIds: string[];
+  locationIds: string[];
+  dependencies: string[];
+  milestones: Omit<QuestMilestone, 'id'>[];
+  xpReward: number;
+  goldReward: number;
+  itemRewards: string[];
+  rewards?: string;
+  notes?: string;
+  playerNotes: string;
+}
+
+// Quest Filter and Search Types
+export interface QuestFilters {
+  status?: Quest['status'][];
+  importance?: Quest['importance'][];
+  involvedNpcIds?: string[];
+  locationIds?: string[];
+  hasRewards?: boolean;
+  hasDependencies?: boolean;
+  completedDateRange?: {
+    start?: Date;
+    end?: Date;
+  };
+}
+
+export interface QuestSearchOptions {
+  query?: string;
+  filters?: QuestFilters;
+  sortBy?: 'title' | 'importance' | 'status' | 'createdAt' | 'completedAt' | 'progress';
+  sortOrder?: 'asc' | 'desc';
+  limit?: number;
+  offset?: number;
+}
+
+// Quest Progress and Timeline Types
+export interface QuestProgress {
+  questId: string;
+  totalMilestones: number;
+  completedMilestones: number;
+  percentage: number;
+  canComplete: boolean; // Based on dependencies
+}
+
+export interface QuestTimelineEvent {
+  id: string;
+  questId: string;
+  type: 'created' | 'milestone_completed' | 'status_changed' | 'dependency_added' | 'completed';
+  title: string;
+  description: string;
+  timestamp: Date;
+  metadata?: Record<string, any>;
+}
+
 export interface LocationFormData {
   name: string;
   type: Location['type'];
@@ -208,3 +291,4 @@ export type CreateCampaignData = Omit<Campaign, 'id' | 'createdAt' | 'updatedAt'
 export type CreateLocationData = Omit<Location, 'id'>;
 export type CreateNPCData = Omit<NPC, 'id'>;
 export type CreateQuestData = Omit<Quest, 'id'>;
+export type CreateEnhancedQuestData = Omit<EnhancedQuest, 'id' | 'createdAt' | 'updatedAt'>;
