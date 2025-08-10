@@ -130,13 +130,62 @@ export interface AICommandResponse {
 }
 
 export interface CampaignExport {
+  version: string;
+  exportedAt: Date;
   campaign: Campaign;
   locations: Location[];
   npcs: NPC[];
   quests: Quest[];
   aiContext: AIContextMemory;
-  exportedAt: Date;
-  version: string;
+  metadata: {
+    totalItems: number;
+    checksum: string;
+  };
+}
+
+// Import/Export operation types
+export interface ExportProgress {
+  stage: 'gathering' | 'processing' | 'generating' | 'complete';
+  progress: number; // 0-100
+  message: string;
+  totalItems?: number;
+  processedItems?: number;
+}
+
+export interface ImportProgress {
+  stage: 'validating' | 'processing' | 'resolving-conflicts' | 'importing' | 'complete';
+  progress: number; // 0-100
+  message: string;
+  totalItems?: number;
+  processedItems?: number;
+}
+
+export interface ImportResult {
+  success: boolean;
+  imported: {
+    campaign: boolean;
+    locations: number;
+    npcs: number;
+    quests: number;
+    aiContext: boolean;
+  };
+  conflicts: ImportConflict[];
+  errors: string[];
+}
+
+export interface ImportConflict {
+  type: 'campaign' | 'location' | 'npc' | 'quest';
+  id: string;
+  name: string;
+  action: 'skip' | 'overwrite' | 'rename';
+  existingItem?: any;
+  newItem?: any;
+}
+
+export interface ImportOptions {
+  overwriteExisting: boolean;
+  resolveConflicts: 'skip' | 'overwrite' | 'rename' | 'ask';
+  importAIContext: boolean;
 }
 
 // Map Layer Types
