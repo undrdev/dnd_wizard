@@ -10,7 +10,7 @@ interface AIContentPreviewProps {
 }
 
 export function AIContentPreview({ content, onAccept, onReject, isLoading = false }: AIContentPreviewProps) {
-  const hasContent = content.npcs?.length || content.quests?.length || content.locations?.length;
+  const hasContent = (content.npcs?.length ?? 0) > 0 || (content.quests?.length ?? 0) > 0 || (content.locations?.length ?? 0) > 0;
   
   if (!hasContent) {
     return null;
@@ -42,7 +42,7 @@ export function AIContentPreview({ content, onAccept, onReject, isLoading = fals
       
       <div className="space-y-4">
         {/* NPCs Preview */}
-        {content.npcs?.length > 0 && (
+        {content.npcs && content.npcs.length > 0 && (
           <div>
             <div className="flex items-center mb-2">
               <UserIcon className="h-5 w-5 text-blue-500 mr-2" />
@@ -59,7 +59,7 @@ export function AIContentPreview({ content, onAccept, onReject, isLoading = fals
         )}
         
         {/* Quests Preview */}
-        {content.quests?.length > 0 && (
+        {content.quests && content.quests.length > 0 && (
           <div>
             <div className="flex items-center mb-2">
               <ClipboardDocumentListIcon className="h-5 w-5 text-purple-500 mr-2" />
@@ -74,9 +74,9 @@ export function AIContentPreview({ content, onAccept, onReject, isLoading = fals
             </div>
           </div>
         )}
-        
+
         {/* Locations Preview */}
-        {content.locations?.length > 0 && (
+        {content.locations && content.locations.length > 0 && (
           <div>
             <div className="flex items-center mb-2">
               <MapPinIcon className="h-5 w-5 text-green-500 mr-2" />
@@ -91,9 +91,9 @@ export function AIContentPreview({ content, onAccept, onReject, isLoading = fals
             </div>
           </div>
         )}
-        
+
         {/* Suggestions */}
-        {content.suggestions?.length > 0 && (
+        {content.suggestions && content.suggestions.length > 0 && (
           <div>
             <h4 className="text-md font-medium text-gray-900 mb-2">Suggestions</h4>
             <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
@@ -103,9 +103,9 @@ export function AIContentPreview({ content, onAccept, onReject, isLoading = fals
             </ul>
           </div>
         )}
-        
+
         {/* Follow-up Questions */}
-        {content.followUpQuestions?.length > 0 && (
+        {content.followUpQuestions && content.followUpQuestions.length > 0 && (
           <div>
             <h4 className="text-md font-medium text-gray-900 mb-2">Follow-up Questions</h4>
             <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">

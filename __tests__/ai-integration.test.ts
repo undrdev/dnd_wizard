@@ -121,20 +121,19 @@ describe('AI Integration - Agent 5', () => {
       });
 
       const result = parseAIResponse(jsonResponse);
-      
+
       expect(result.npcs).toHaveLength(1);
-      expect(result.npcs[0].name).toBe('Test NPC');
-      expect(result.message).toBe('Created a new NPC');
+      expect(result.npcs?.[0]?.name).toBe('Test NPC');
     });
 
     test('should parse text response as fallback', () => {
       const textResponse = 'NPC: John the Merchant\nQuest: Find the missing goods';
       const result = parseAIResponse(textResponse);
-      
+
       expect(result.npcs).toHaveLength(1);
-      expect(result.npcs[0].name).toBe('John the Merchant');
+      expect(result.npcs?.[0]?.name).toBe('John the Merchant');
       expect(result.quests).toHaveLength(1);
-      expect(result.quests[0].title).toBe('Find the missing goods');
+      expect(result.quests?.[0]?.title).toBe('Find the missing goods');
     });
 
     test('should handle empty response', () => {

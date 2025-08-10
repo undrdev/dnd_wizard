@@ -98,18 +98,34 @@ async function generateWithAnthropic(prompt: string, context: any) {
   };
 }
 
-async function generateWithOpenAIEnhanced(prompt: string, context: any, command: any): Promise<string> {
+async function generateWithOpenAIEnhanced(prompt: string, context: any, command: any): Promise<any> {
   // This would use the same enhanced system prompt logic as the client-side AI service
   // For now, delegate to the existing function but with enhanced prompting
   const enhancedPrompt = buildEnhancedPrompt(prompt, context, command);
-  return generateWithOpenAI(enhancedPrompt, context);
+  const result = await generateWithOpenAI(enhancedPrompt, context);
+
+  // Return structured object instead of string
+  return {
+    message: result,
+    npcs: [],
+    quests: [],
+    locations: []
+  };
 }
 
-async function generateWithAnthropicEnhanced(prompt: string, context: any, command: any): Promise<string> {
+async function generateWithAnthropicEnhanced(prompt: string, context: any, command: any): Promise<any> {
   // This would use the same enhanced system prompt logic as the client-side AI service
   // For now, delegate to the existing function but with enhanced prompting
   const enhancedPrompt = buildEnhancedPrompt(prompt, context, command);
-  return generateWithAnthropic(enhancedPrompt, context);
+  const result = await generateWithAnthropic(enhancedPrompt, context);
+
+  // Return structured object instead of string
+  return {
+    message: result,
+    npcs: [],
+    quests: [],
+    locations: []
+  };
 }
 
 function buildEnhancedPrompt(prompt: string, context: any, command: any): string {

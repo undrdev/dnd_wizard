@@ -15,7 +15,7 @@ export function AIChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { getCurrentCampaignData } = useAppStore();
-  const { hasValidProvider, conversationHistory } = useAIStore();
+  const { hasValidProvider, conversationHistory, currentProvider } = useAIStore();
   const {
     isGenerating,
     previewContent,
