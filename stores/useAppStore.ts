@@ -12,9 +12,14 @@ import type {
   MapLayer,
   MapAnnotation,
   DrawingMode,
+  RealtimeAppState,
+  ConnectionState,
+  OfflineState,
+  OptimisticUpdate,
+  PerformanceMetrics,
 } from '@/types';
 
-interface AppStore extends AppState {
+interface AppStore extends RealtimeAppState {
   // Actions
   setUser: (user: User | null) => void;
   setCurrentCampaign: (campaign: Campaign | null) => void;
@@ -22,31 +27,39 @@ interface AppStore extends AppState {
   addCampaign: (campaign: Campaign) => void;
   updateCampaign: (campaignId: string, updates: Partial<Campaign>) => void;
   deleteCampaign: (campaignId: string) => void;
-  
+
   setLocations: (locations: Location[]) => void;
   addLocation: (location: Location) => void;
   updateLocation: (locationId: string, updates: Partial<Location>) => void;
   deleteLocation: (locationId: string) => void;
-  
+
   setNPCs: (npcs: NPC[]) => void;
   addNPC: (npc: NPC) => void;
   updateNPC: (npcId: string, updates: Partial<NPC>) => void;
   deleteNPC: (npcId: string) => void;
-  
+
   setQuests: (quests: Quest[]) => void;
   addQuest: (quest: Quest) => void;
   updateQuest: (questId: string, updates: Partial<Quest>) => void;
   deleteQuest: (questId: string) => void;
-  
+
   setMapState: (mapState: Partial<MapState>) => void;
   selectNPC: (npcId: string | undefined) => void;
   selectQuest: (questId: string | undefined) => void;
   selectLocation: (locationId: string | undefined) => void;
-  
+
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
-  
+
+  // Real-time and offline actions
+  setConnectionState: (state: ConnectionState) => void;
+  setOfflineState: (state: OfflineState) => void;
+  addOptimisticUpdate: (update: OptimisticUpdate) => void;
+  removeOptimisticUpdate: (updateId: string) => void;
+  clearOptimisticUpdates: () => void;
+  setPerformanceMetrics: (metrics: PerformanceMetrics) => void;
+
   // Computed getters
   getCurrentCampaignData: () => {
     campaign: Campaign | null;
@@ -54,11 +67,11 @@ interface AppStore extends AppState {
     npcs: NPC[];
     quests: Quest[];
   };
-  
+
   getSelectedNPC: () => NPC | undefined;
   getSelectedQuest: () => Quest | undefined;
   getSelectedLocation: () => Location | undefined;
-  
+
   // Utility actions
   reset: () => void;
   loadCampaignData: (data: {
@@ -70,7 +83,7 @@ interface AppStore extends AppState {
   refreshCampaignData: () => Promise<void>;
 }
 
-const initialState: AppState = {
+const initialState: RealtimeAppState = {
   user: null,
   currentCampaign: null,
   campaigns: [],
@@ -93,6 +106,19 @@ const initialState: AppState = {
   },
   isLoading: false,
   error: null,
+  connectionState: {
+    isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+    isConnected: false,
+    retryCount: 0,
+  },
+  offlineState: {
+    isOffline: typeof navigator !== 'undefined' ? !navigator.onLine : false,
+    pendingOperations: [],
+    syncInProgress: false,
+    storageQuota: { used: 0, available: 0 },
+  },
+  optimisticUpdates: [],
+  performanceMetrics: undefined,
 };
 
 export const useAppStore = create<AppStore>()(
@@ -209,6 +235,22 @@ export const useAppStore = create<AppStore>()(
         setLoading: (isLoading) => set({ isLoading }),
         setError: (error) => set({ error }),
         clearError: () => set({ error: null }),
+
+        // Real-time and offline actions
+        setConnectionState: (connectionState) => set({ connectionState }),
+        setOfflineState: (offlineState) => set({ offlineState }),
+        addOptimisticUpdate: (update) =>
+          set((state) => ({
+            optimisticUpdates: [...state.optimisticUpdates, update],
+          })),
+        removeOptimisticUpdate: (updateId) =>
+          set((state) => ({
+            optimisticUpdates: state.optimisticUpdates.filter(
+              (update) => update.id !== updateId
+            ),
+          })),
+        clearOptimisticUpdates: () => set({ optimisticUpdates: [] }),
+        setPerformanceMetrics: (performanceMetrics) => set({ performanceMetrics }),
 
         // Computed getters
         getCurrentCampaignData: () => {

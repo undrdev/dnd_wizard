@@ -1,6 +1,7 @@
 import type { AppProps } from 'next/app';
 import { useEffect, useState } from 'react';
 import { AuthProvider } from '@/components/auth/AuthProvider';
+import { RealtimeProvider } from '@/components/providers/RealtimeProvider';
 import { Layout } from '@/components/ui/Layout';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { ErrorToast } from '@/components/ui/ErrorMessage';

@@ -530,3 +530,161 @@ export interface LocationFormData {
   economy?: string;
   parentLocationId?: string;
 }
+
+// AGENT 7: Real-time Data Synchronization & Performance Types
+
+// Real-time Service Types
+export interface RealtimeSubscription {
+  id: string;
+  collection: string;
+  filters?: any[];
+  callback: (data: any[]) => void;
+  unsubscribe: () => void;
+}
+
+export interface RealtimeService {
+  subscribeToCollection<T>(
+    collection: string,
+    callback: (data: T[]) => void,
+    filters?: any[]
+  ): () => void;
+
+  updateWithOptimism<T>(
+    collection: string,
+    id: string,
+    updates: Partial<T>
+  ): Promise<void>;
+
+  createWithOptimism<T>(
+    collection: string,
+    data: T
+  ): Promise<string>;
+
+  deleteWithOptimism(
+    collection: string,
+    id: string
+  ): Promise<void>;
+}
+
+// Connection State Types
+export interface ConnectionState {
+  isOnline: boolean;
+  isConnected: boolean;
+  lastConnected?: Date;
+  retryCount: number;
+  error?: string;
+}
+
+export interface ConnectionStatus {
+  status: 'connected' | 'disconnected' | 'reconnecting' | 'error';
+  message?: string;
+  timestamp: Date;
+}
+
+// Optimistic Update Types
+export interface OptimisticUpdate<T = any> {
+  id: string;
+  collection: string;
+  operation: 'create' | 'update' | 'delete';
+  data: T;
+  originalData?: T;
+  timestamp: Date;
+  retryCount: number;
+  error?: string;
+}
+
+export interface ConflictResolution {
+  type: 'server-wins' | 'client-wins' | 'merge' | 'manual';
+  serverData: any;
+  clientData: any;
+  resolvedData?: any;
+}
+
+// Performance Monitoring Types
+export interface PerformanceMetrics {
+  loadTime: number;
+  renderTime: number;
+  memoryUsage: number;
+  networkLatency: number;
+  cacheHitRate: number;
+  timestamp: Date;
+}
+
+export interface PerformanceConfig {
+  enableMonitoring: boolean;
+  sampleRate: number;
+  reportInterval: number;
+  thresholds: {
+    loadTime: number;
+    renderTime: number;
+    memoryUsage: number;
+  };
+}
+
+// Offline Support Types
+export interface OfflineState {
+  isOffline: boolean;
+  lastSync?: Date;
+  pendingOperations: OfflineOperation[];
+  syncInProgress: boolean;
+  storageQuota: {
+    used: number;
+    available: number;
+  };
+}
+
+export interface OfflineOperation {
+  id: string;
+  type: 'create' | 'update' | 'delete';
+  collection: string;
+  documentId?: string;
+  data: any;
+  timestamp: Date;
+  retryCount: number;
+  error?: string;
+}
+
+export interface OfflineStorage {
+  store<T>(key: string, data: T): Promise<void>;
+  retrieve<T>(key: string): Promise<T | null>;
+  remove(key: string): Promise<void>;
+  clear(): Promise<void>;
+  sync(): Promise<void>;
+  getStorageInfo(): Promise<{
+    used: number;
+    available: number;
+  }>;
+}
+
+// Service Worker Types
+export interface ServiceWorkerConfig {
+  cacheName: string;
+  version: string;
+  staticAssets: string[];
+  apiEndpoints: string[];
+  offlinePages: string[];
+}
+
+export interface CacheStrategy {
+  name: 'cache-first' | 'network-first' | 'stale-while-revalidate';
+  maxAge?: number;
+  maxEntries?: number;
+}
+
+// Loading Skeleton Types
+export interface SkeletonConfig {
+  rows: number;
+  columns?: number;
+  height?: string;
+  width?: string;
+  borderRadius?: string;
+  animation?: 'pulse' | 'wave' | 'none';
+}
+
+// Enhanced App State for Real-time Features
+export interface RealtimeAppState extends AppState {
+  connectionState: ConnectionState;
+  offlineState: OfflineState;
+  optimisticUpdates: OptimisticUpdate[];
+  performanceMetrics?: PerformanceMetrics;
+}

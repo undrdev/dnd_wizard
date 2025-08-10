@@ -30,7 +30,7 @@ interface NPCFormData {
 }
 
 export function NPCModal({ isOpen, onClose, npc, mode }: NPCModalProps) {
-  const { locations } = useAppStore();
+  const { locations, currentCampaign } = useAppStore();
   const { 
     npcs, 
     createNPC, 
@@ -275,6 +275,8 @@ export function NPCModal({ isOpen, onClose, npc, mode }: NPCModalProps) {
                       <PortraitUpload
                         currentPortraitUrl={formData.portraitUrl}
                         onPortraitChange={(url) => handleInputChange('portraitUrl', url || '')}
+                        npcId={npc?.id}
+                        campaignId={currentCampaign?.id || ''}
                         disabled={isLoading}
                       />
                     </div>
