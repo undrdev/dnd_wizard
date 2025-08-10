@@ -125,20 +125,12 @@ export function MobileMapControls({ className = '' }: MobileMapControlsProps) {
                   checked={layer.visible}
                   onChange={() => handleLayerToggle(layer.id)}
                   className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                  aria-describedby={`layer-${layer.id}-description`}
+                  aria-label={`Toggle ${layer.name} layer`}
                 />
                 <div className="flex-1">
                   <span className="text-sm font-medium text-gray-900">
                     {layer.name}
                   </span>
-                  {layer.description && (
-                    <p 
-                      id={`layer-${layer.id}-description`}
-                      className="text-xs text-gray-500"
-                    >
-                      {layer.description}
-                    </p>
-                  )}
                 </div>
                 {layer.visible ? (
                   <EyeIcon className="w-4 h-4 text-primary-600" aria-hidden="true" />

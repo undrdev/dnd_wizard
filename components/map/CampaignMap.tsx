@@ -123,9 +123,6 @@ export function CampaignMap({ className = '' }: CampaignMapProps) {
             announceToScreenReader('Map loaded and ready for interaction', 'polite');
           }
         }}
-        // Accessibility attributes
-        aria-label="Campaign map"
-        tabIndex={0}
       >
         {/* Base tile layer - using theme-based layer */}
         <TileLayer

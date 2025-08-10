@@ -71,7 +71,7 @@ export class FocusManager {
 
   static getFocusableElements(container: HTMLElement): HTMLElement[] {
     return Array.from(container.querySelectorAll(this.focusableSelectors))
-      .filter(el => this.isVisible(el)) as HTMLElement[];
+      .filter(el => this.isVisible(el as HTMLElement)) as HTMLElement[];
   }
 
   static isVisible(element: HTMLElement): boolean {
