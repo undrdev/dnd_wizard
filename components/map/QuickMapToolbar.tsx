@@ -1,40 +1,41 @@
 import React from 'react';
-import { 
-  PlusIcon, 
+import {
+  PlusIcon,
   MinusIcon,
   MagnifyingGlassIcon,
   MapIcon,
   PencilIcon,
   PaintBrushIcon
 } from '@heroicons/react/24/outline';
-import { useMap } from '@/hooks/useMap';
+import { useMap } from 'react-leaflet';
+import { useMap as useMapHook } from '@/hooks/useMap';
 
 interface QuickMapToolbarProps {
   className?: string;
 }
 
 export function QuickMapToolbar({ className = '' }: QuickMapToolbarProps) {
-  const { 
-    drawingMode, 
-    setDrawingMode, 
-    mapRef 
-  } = useMap();
+  const map = useMap(); // Leaflet map instance
+  const {
+    drawingMode,
+    setDrawingMode
+  } = useMapHook(); // Our custom hook
 
   const handleZoomIn = () => {
-    if (mapRef) {
-      mapRef.zoomIn();
+    if (map) {
+      map.zoomIn();
     }
   };
 
   const handleZoomOut = () => {
-    if (mapRef) {
-      mapRef.zoomOut();
+    if (map) {
+      map.zoomOut();
     }
   };
 
   const handleFitBounds = () => {
-    if (mapRef) {
-      mapRef.fitWorld();
+    if (map) {
+      map.fitWorld();
     }
   };
 

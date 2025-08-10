@@ -16,6 +16,7 @@ import { DrawingTools } from './DrawingTools';
 import { FantasyTileLayerComponent } from './FantasyTileLayer';
 import { MapSidePanel, MobileMapSidePanel } from './MapSidePanel';
 import { QuickMapToolbar } from './QuickMapToolbar';
+import { DrawingController } from './DrawingController';
 import { MobileMapControls, TouchMapInteractions, MapGestureInstructions } from './MobileMapControls';
 import 'leaflet/dist/leaflet.css';
 
@@ -159,6 +160,12 @@ export function CampaignMap({ className = '' }: CampaignMapProps) {
 
         {/* Annotations layer */}
         <AnnotationsLayer />
+
+        {/* Drawing Controller - Handles drawing interactions */}
+        <DrawingController />
+
+        {/* Quick Map Toolbar - Inside MapContainer */}
+        <QuickMapToolbar className="absolute top-4 left-4 z-[1000]" />
       </MapContainer>
 
       {/* Touch interactions for mobile */}
@@ -170,9 +177,6 @@ export function CampaignMap({ className = '' }: CampaignMapProps) {
           <MapControls />
         </div>
       )}
-
-      {/* Quick Map Toolbar - Always visible */}
-      <QuickMapToolbar className="absolute top-4 left-4 z-[1000]" />
 
       {/* Map Side Panel - Desktop */}
       {!isMobile && <MapSidePanel />}

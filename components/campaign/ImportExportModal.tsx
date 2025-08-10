@@ -87,7 +87,7 @@ export function ImportExportModal({ isOpen, onClose }: ImportExportModalProps) {
   ];
 
   return (
-    <Dialog open={isOpen} onClose={handleClose} className="relative z-50">
+    <Dialog open={isOpen} onClose={handleClose} className="relative z-[9999]">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       
       <div className="fixed inset-0 flex items-center justify-center p-4">
