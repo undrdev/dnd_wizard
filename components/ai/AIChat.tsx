@@ -57,7 +57,7 @@ export function AIChat() {
 
       // Process generated content
       if (response.success && response.data) {
-        if (response.data.npcs?.length > 0) {
+        if (response.data.npcs && response.data.npcs.length > 0) {
           response.data.npcs.forEach((npc: any) => {
             // Add generated NPC to store
             // Note: In a real implementation, you'd save to Firestore here
@@ -65,14 +65,14 @@ export function AIChat() {
           });
         }
 
-        if (response.data.quests?.length > 0) {
+        if (response.data.quests && response.data.quests.length > 0) {
           response.data.quests.forEach((quest: any) => {
             // Add generated quest to store
             console.log('Generated Quest:', quest);
           });
         }
 
-        if (response.data.locations?.length > 0) {
+        if (response.data.locations && response.data.locations.length > 0) {
           response.data.locations.forEach((location: any) => {
             // Add generated location to store
             console.log('Generated Location:', location);

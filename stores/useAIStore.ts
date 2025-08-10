@@ -12,8 +12,8 @@ interface AIStore {
   // Actions
   setProviders: (providers: AIProviderConfig) => void;
   setCurrentProvider: (provider: 'openai' | 'anthropic' | null) => void;
-  setOpenAIConfig: (config: { apiKey: string; model: string }) => void;
-  setAnthropicConfig: (config: { apiKey: string; model: string }) => void;
+  setOpenAIConfig: (config: { apiKey: string; model: any }) => void;
+  setAnthropicConfig: (config: { apiKey: string; model: any }) => void;
   setGenerating: (generating: boolean) => void;
   addMessage: (message: AIMessage) => void;
   clearHistory: () => void;
@@ -65,13 +65,13 @@ export const useAIStore = create<AIStore>()(
         
         clearHistory: () => set({ conversationHistory: [] }),
         
-        hasValidProvider: () => {
+        hasValidProvider: (): boolean => {
           const state = get();
           const provider = state.currentProvider;
           if (!provider) return false;
-          
+
           const config = state.providers[provider];
-          return config && config.apiKey && config.model;
+          return Boolean(config && config.apiKey && config.model);
         },
         
         getCurrentProviderConfig: () => {

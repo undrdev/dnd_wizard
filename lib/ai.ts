@@ -25,9 +25,9 @@ export class AIService {
   hasValidProvider(): boolean {
     const openai = this.config.openai;
     const anthropic = this.config.anthropic;
-    
-    return (openai && openai.apiKey && openai.model) || 
-           (anthropic && anthropic.apiKey && anthropic.model);
+
+    return Boolean((openai && openai.apiKey && openai.model) ||
+                   (anthropic && anthropic.apiKey && anthropic.model));
   }
 
   async generateContent(
