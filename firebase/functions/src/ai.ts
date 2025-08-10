@@ -1,8 +1,31 @@
 import { Request, Response } from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { parseCommand, parseAIResponse } from '../../../lib/aiParsers';
 
 const db = admin.firestore();
+
+// Simple placeholder functions for AI parsing
+function parseCommand(command: string, context?: any) {
+  return {
+    type: 'CREATE_NPC',
+    parameters: { name: 'Generated NPC', role: 'Villager' },
+    confidence: 0.8,
+    originalText: command,
+    context: context
+  };
+}
+
+function parseAIResponse(response: string) {
+  try {
+    return JSON.parse(response);
+  } catch {
+    return {
+      message: response,
+      npcs: [],
+      quests: [],
+      locations: []
+    };
+  }
+}
 
 export async function generateContent(req: Request, res: Response) {
   try {
