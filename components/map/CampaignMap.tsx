@@ -13,6 +13,7 @@ import { CustomMarkers } from './CustomMarkers';
 import { TerrainLayers } from './TerrainLayers';
 import { LayerManager } from './LayerManager';
 import { DrawingTools } from './DrawingTools';
+import { FantasyTileLayerComponent } from './FantasyTileLayer';
 import { MobileMapControls, TouchMapInteractions, MapGestureInstructions } from './MobileMapControls';
 import 'leaflet/dist/leaflet.css';
 
@@ -124,12 +125,21 @@ export function CampaignMap({ className = '' }: CampaignMapProps) {
           }
         }}
       >
-        {/* Base tile layer - using theme-based layer */}
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url={currentTheme?.baseLayer || "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"}
-          opacity={0.7}
-        />
+        {/* Fantasy world tile layer - procedurally generated based on campaign */}
+        {currentCampaign?.mapSeed ? (
+          <FantasyTileLayerComponent
+            mapSeed={currentCampaign.mapSeed}
+            opacity={0.9}
+            attribution={`Fantasy World: ${currentCampaign.title}`}
+          />
+        ) : (
+          /* Fallback to standard tiles when no campaign is loaded */
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url={currentTheme?.baseLayer || "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"}
+            opacity={0.7}
+          />
+        )}
 
         {/* Terrain and biome layers */}
         <TerrainLayers />

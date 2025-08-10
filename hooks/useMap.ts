@@ -189,12 +189,17 @@ export function useMap() {
   // Initialize default layers if empty
   const initializeDefaultLayers = useCallback(() => {
     if (mapState.layers.length === 0) {
-      setMapState({ 
+      // Set fantasy theme for campaigns with mapSeed, otherwise use standard theme
+      const defaultTheme = currentCampaign?.mapSeed
+        ? DEFAULT_MAP_THEMES.find(theme => theme.id === 'fantasy') || DEFAULT_MAP_THEMES[0]
+        : DEFAULT_MAP_THEMES[0];
+
+      setMapState({
         layers: [...DEFAULT_TERRAIN_LAYERS],
-        currentTheme: DEFAULT_MAP_THEMES[0]
+        currentTheme: defaultTheme
       });
     }
-  }, [mapState.layers.length, setMapState]);
+  }, [mapState.layers.length, setMapState, currentCampaign]);
 
   // Utility functions
   const fitBoundsToAnnotations = useCallback(() => {

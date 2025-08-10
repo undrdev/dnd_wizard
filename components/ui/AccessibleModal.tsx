@@ -105,7 +105,7 @@ export function AccessibleModal({
     <Transition appear show={isOpen} as={React.Fragment}>
       <Dialog
         as="div"
-        className="relative z-50"
+        className="relative z-[9999]"
         onClose={closeOnOverlayClick ? handleClose : () => {}}
         initialFocus={initialFocus || closeButtonRef}
         aria-labelledby={titleId}

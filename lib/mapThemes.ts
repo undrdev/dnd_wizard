@@ -14,8 +14,8 @@ export const DEFAULT_MAP_THEMES: MapTheme[] = [
   },
   {
     id: 'fantasy',
-    name: 'Fantasy',
-    baseLayer: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    name: 'Fantasy World',
+    baseLayer: 'fantasy://procedural', // Special identifier for fantasy tiles
     markerStyle: {
       npc: { color: '#8b5cf6', size: 25, icon: '🧙', clusterColor: '#7c3aed' },
       quest: { color: '#f59e0b', size: 25, icon: '⚔️', clusterColor: '#d97706' },
