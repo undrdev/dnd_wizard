@@ -1,4 +1,5 @@
 import type { AIProviderConfig, AIMessage, AICommandRequest, AICommandResponse } from '@/types';
+import { parseCommand, parseAIResponse, type AICommand, type CampaignContext } from './aiParsers';
 
 // AI Service class for handling AI provider interactions
 export class AIService {
@@ -130,27 +131,94 @@ export class AIService {
     }
   }
 
-  private getSystemPrompt(context?: any): string {
-    const basePrompt = `You are an AI assistant specialized in creating and managing tabletop RPG campaigns. You help Game Masters create engaging NPCs, quests, locations, and storylines.
+  private getSystemPrompt(context?: CampaignContext, command?: AICommand): string {
+    const basePrompt = `You are an expert D&D campaign assistant specializing in creating rich, interconnected campaign content.
 
-When responding to requests, always try to provide structured data that can be used to populate the campaign world. Format your responses as JSON when creating new content.
+RESPONSE FORMAT: Always respond with valid JSON in this exact structure:
+{
+  "npcs": [{"name": "string", "role": "string", "personality": "string", "locationId": "string", "stats": {}, "backstory": "string", "goals": ["string"], "secrets": ["string"]}],
+  "quests": [{"title": "string", "description": "string", "importance": "low|medium|high", "startNpcId": "string", "involvedNpcIds": ["string"], "locationIds": ["string"], "rewards": "string", "milestones": [{"title": "string", "description": "string"}]}],
+  "locations": [{"name": "string", "type": "city|village|landmark|dungeon", "description": "string", "coords": {"lat": number, "lng": number}, "history": "string", "rumors": ["string"], "secrets": ["string"]}],
+  "suggestions": ["string"],
+  "followUpQuestions": ["string"],
+  "message": "A helpful response explaining what was created"
+}
 
-For NPCs, include: name, role, personality, stats (if relevant), and location.
-For Quests, include: title, description, importance (low/medium/high), involved NPCs, and locations.
-For Locations, include: name, type (city/village/landmark/dungeon), description, and coordinates.
+CONTENT GUIDELINES:
+- Create interconnected content that references existing campaign elements
+- NPCs should have clear motivations, backstories, and relationships
+- Quests should have multiple steps and meaningful rewards
+- Locations should feel lived-in with history and secrets
+- Always consider how new content fits with existing elements
 
-Be creative, engaging, and consistent with the established campaign world.`;
+Only include arrays that contain new content. Empty arrays should be omitted.`;
 
-    if (context) {
+    if (context && command) {
+      const contextInfo = this.buildContextInfo(context, command);
       return `${basePrompt}
 
-Current Campaign Context:
-${JSON.stringify(context, null, 2)}
+${contextInfo}
 
-Use this context to ensure consistency with the existing world.`;
+COMMAND ANALYSIS:
+Type: ${command.type}
+Confidence: ${(command.confidence * 100).toFixed(0)}%
+Parameters: ${JSON.stringify(command.parameters, null, 2)}
+
+Please create content that directly addresses this command while fitting seamlessly into the existing campaign.`;
     }
 
     return basePrompt;
+  }
+
+  private buildContextInfo(context: CampaignContext, command: AICommand): string {
+    let info = `CURRENT CAMPAIGN CONTEXT:
+Campaign: "${context.campaign?.title || 'Unknown'}"
+Description: ${context.campaign?.description || 'No description'}
+
+EXISTING CONTENT:`;
+
+    if (context.locations?.length > 0) {
+      info += `\nLocations (${context.locations.length}):`;
+      context.locations.forEach(loc => {
+        info += `\n- ${loc.name} (${loc.type}): ${loc.description}`;
+      });
+    }
+
+    if (context.npcs?.length > 0) {
+      info += `\nNPCs (${context.npcs.length}):`;
+      context.npcs.forEach(npc => {
+        const location = context.locations?.find(l => l.id === npc.locationId);
+        info += `\n- ${npc.name} (${npc.role}) at ${location?.name || 'Unknown'}: ${npc.personality}`;
+      });
+    }
+
+    if (context.quests?.length > 0) {
+      info += `\nQuests (${context.quests.length}):`;
+      context.quests.forEach(quest => {
+        info += `\n- ${quest.title} (${quest.importance}, ${quest.status}): ${quest.description}`;
+      });
+    }
+
+    // Add specific guidance based on command type
+    switch (command.type) {
+      case 'CREATE_NPC':
+        info += `\n\nFOCUS: Create an NPC that fits the campaign theme and has clear connections to existing locations and potentially other NPCs.`;
+        break;
+      case 'CREATE_QUEST':
+        info += `\n\nFOCUS: Create a quest that involves existing NPCs and locations, with clear objectives and meaningful rewards.`;
+        break;
+      case 'CREATE_LOCATION':
+        info += `\n\nFOCUS: Create a location that fits the campaign world and could house interesting NPCs or quests.`;
+        break;
+      case 'MODIFY':
+        info += `\n\nFOCUS: Modify the specified content while maintaining consistency with the rest of the campaign.`;
+        break;
+      case 'SUGGEST':
+        info += `\n\nFOCUS: Provide creative suggestions that would enhance the campaign and create new story opportunities.`;
+        break;
+    }
+
+    return info;
   }
 
   private parseAIResponse(content: string): any {
@@ -181,10 +249,15 @@ Use this context to ensure consistency with the existing world.`;
         throw new Error('No AI provider configured');
       }
 
-      const result = await this.generateContent(
+      // Parse the command for better context
+      const parsedCommand = parseCommand(request.command, request.context as CampaignContext);
+
+      // Generate content with enhanced context
+      const result = await this.generateContentWithCommand(
         request.command,
         provider,
-        request.context
+        request.context as CampaignContext,
+        parsedCommand
       );
 
       return {
@@ -197,6 +270,115 @@ Use this context to ensure consistency with the existing world.`;
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
+    }
+  }
+
+  private async generateContentWithCommand(
+    prompt: string,
+    provider: 'openai' | 'anthropic',
+    context: CampaignContext,
+    command: AICommand
+  ): Promise<any> {
+    if (!this.hasValidProvider()) {
+      throw new Error('No valid AI provider configured');
+    }
+
+    switch (provider) {
+      case 'openai':
+        return this.generateWithOpenAIEnhanced(prompt, context, command);
+      case 'anthropic':
+        return this.generateWithAnthropicEnhanced(prompt, context, command);
+      default:
+        throw new Error(`Unsupported provider: ${provider}`);
+    }
+  }
+
+  private async generateWithOpenAIEnhanced(
+    prompt: string,
+    context: CampaignContext,
+    command: AICommand
+  ): Promise<any> {
+    const config = this.config.openai;
+    if (!config || !config.apiKey) {
+      throw new Error('OpenAI configuration not found');
+    }
+
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${config.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: config.model,
+          messages: [
+            {
+              role: 'system',
+              content: this.getSystemPrompt(context, command),
+            },
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+          temperature: 0.7,
+          max_tokens: 3000,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return parseAIResponse(data.choices[0].message.content);
+    } catch (error) {
+      console.error('OpenAI generation error:', error);
+      throw error;
+    }
+  }
+
+  private async generateWithAnthropicEnhanced(
+    prompt: string,
+    context: CampaignContext,
+    command: AICommand
+  ): Promise<any> {
+    const config = this.config.anthropic;
+    if (!config || !config.apiKey) {
+      throw new Error('Anthropic configuration not found');
+    }
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': config.apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: config.model,
+          max_tokens: 3000,
+          system: this.getSystemPrompt(context, command),
+          messages: [
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Anthropic API error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return parseAIResponse(data.content[0].text);
+    } catch (error) {
+      console.error('Anthropic generation error:', error);
+      throw error;
     }
   }
 
