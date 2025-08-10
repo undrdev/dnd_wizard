@@ -226,7 +226,7 @@ class OfflineStorageImpl implements OfflineStorage {
 class OfflineManager {
   private storage: OfflineStorageImpl;
   private state: OfflineState = {
-    isOffline: !navigator.onLine,
+    isOffline: typeof navigator !== 'undefined' ? !navigator.onLine : false,
     pendingOperations: [],
     syncInProgress: false,
     storageQuota: { used: 0, available: 0 },
@@ -236,9 +236,11 @@ class OfflineManager {
 
   constructor() {
     this.storage = new OfflineStorageImpl();
-    this.initializeOfflineHandling();
-    this.loadPendingOperations();
-    this.updateStorageInfo();
+    if (typeof window !== 'undefined') {
+      this.initializeOfflineHandling();
+      this.loadPendingOperations();
+      this.updateStorageInfo();
+    }
   }
 
   private initializeOfflineHandling() {

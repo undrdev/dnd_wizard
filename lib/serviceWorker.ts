@@ -188,7 +188,7 @@ class ServiceWorkerManager {
 export function requestBackgroundSync(tag: string): void {
   if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
     navigator.serviceWorker.ready.then((registration) => {
-      return registration.sync.register(tag);
+      return (registration as any).sync.register(tag);
     }).catch((error) => {
       console.error('Background sync registration failed:', error);
     });
@@ -221,6 +221,11 @@ export async function subscribeToPushNotifications(
   vapidPublicKey: string
 ): Promise<PushSubscription | null> {
   try {
+    if (!registration.pushManager) {
+      console.warn('Push manager not available');
+      return null;
+    }
+
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: vapidPublicKey,

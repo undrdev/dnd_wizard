@@ -239,7 +239,7 @@ export function useOfflineStorage() {
 
 // Hook for network status
 export function useNetworkStatus() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [connectionType, setConnectionType] = useState<string>('unknown');
 
   useEffect(() => {

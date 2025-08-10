@@ -21,7 +21,7 @@ class PerformanceMonitor {
       this.config = { ...this.config, ...config };
     }
 
-    if (this.shouldMonitor()) {
+    if (typeof window !== 'undefined' && this.shouldMonitor()) {
       this.initialize();
     }
   }
@@ -109,8 +109,8 @@ class PerformanceMonitor {
   }
 
   private recordNavigationMetrics(entry: PerformanceNavigationTiming) {
-    const loadTime = entry.loadEventEnd - entry.navigationStart;
-    const renderTime = entry.domContentLoadedEventEnd - entry.navigationStart;
+    const loadTime = entry.loadEventEnd - entry.fetchStart;
+    const renderTime = entry.domContentLoadedEventEnd - entry.fetchStart;
 
     this.addMetric({
       loadTime,

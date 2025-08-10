@@ -27,7 +27,7 @@ import type {
 class RealtimeServiceImpl implements RealtimeService {
   private subscriptions = new Map<string, RealtimeSubscription>();
   private connectionState: ConnectionState = {
-    isOnline: navigator.onLine,
+    isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
     isConnected: false,
     retryCount: 0,
   };
@@ -36,7 +36,9 @@ class RealtimeServiceImpl implements RealtimeService {
   private retryTimeouts = new Map<string, NodeJS.Timeout>();
 
   constructor() {
-    this.initializeConnectionMonitoring();
+    if (typeof window !== 'undefined') {
+      this.initializeConnectionMonitoring();
+    }
   }
 
   private initializeConnectionMonitoring() {
@@ -161,11 +163,11 @@ class RealtimeServiceImpl implements RealtimeService {
     const optimisticId = `${collectionName}_${id}_${Date.now()}`;
     
     // Create optimistic update record
-    const optimisticUpdate: OptimisticUpdate<T> = {
+    const optimisticUpdate: OptimisticUpdate = {
       id: optimisticId,
       collection: collectionName,
       operation: 'update',
-      data: updates,
+      data: updates as any,
       timestamp: new Date(),
       retryCount: 0,
     };
@@ -207,11 +209,11 @@ class RealtimeServiceImpl implements RealtimeService {
     const tempId = `temp_${Date.now()}_${Math.random()}`;
     const optimisticId = `${collectionName}_${tempId}_create`;
     
-    const optimisticUpdate: OptimisticUpdate<T> = {
+    const optimisticUpdate: OptimisticUpdate = {
       id: optimisticId,
       collection: collectionName,
       operation: 'create',
-      data,
+      data: data as any,
       timestamp: new Date(),
       retryCount: 0,
     };

@@ -107,12 +107,12 @@ const initialState: RealtimeAppState = {
   isLoading: false,
   error: null,
   connectionState: {
-    isOnline: navigator.onLine,
+    isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
     isConnected: false,
     retryCount: 0,
   },
   offlineState: {
-    isOffline: !navigator.onLine,
+    isOffline: typeof navigator !== 'undefined' ? !navigator.onLine : false,
     pendingOperations: [],
     syncInProgress: false,
     storageQuota: { used: 0, available: 0 },
