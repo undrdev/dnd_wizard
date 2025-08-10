@@ -27,7 +27,7 @@ export class AIService {
     const openai = this.config.openai;
     const anthropic = this.config.anthropic;
 
-    return Boolean((openai && openai.apiKey && openai.model) ||
+    return Boolean((openai && openai.model) ||
                    (anthropic && anthropic.apiKey && anthropic.model));
   }
 
@@ -52,40 +52,39 @@ export class AIService {
 
   private async generateWithOpenAI(prompt: string, context?: any): Promise<any> {
     const config = this.config.openai;
-    if (!config || !config.apiKey) {
+    if (!config || !config.model) {
       throw new Error('OpenAI configuration not found');
     }
 
     try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetch('/api/generateContent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${config.apiKey}`,
         },
         body: JSON.stringify({
+          prompt,
           model: config.model,
-          messages: [
-            {
-              role: 'system',
-              content: this.getSystemPrompt(context),
-            },
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
+          systemMessage: this.getSystemPrompt(context),
           temperature: 0.7,
-          max_tokens: 2000,
+          maxTokens: 2000,
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
-      return this.parseAIResponse(data.choices[0].message.content);
+
+      if (!data.success) {
+        console.error('API Error Data:', data);
+        throw new Error(`API error: ${data.error || 'Unknown error'}`);
+      }
+
+      return this.parseAIResponse(data.content);
     } catch (error) {
       console.error('OpenAI generation error:', error);
       throw error;
@@ -299,40 +298,39 @@ EXISTING CONTENT:`;
     command: AICommand
   ): Promise<any> {
     const config = this.config.openai;
-    if (!config || !config.apiKey) {
+    if (!config || !config.model) {
       throw new Error('OpenAI configuration not found');
     }
 
     try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetch('/api/generateContent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${config.apiKey}`,
         },
         body: JSON.stringify({
+          prompt,
           model: config.model,
-          messages: [
-            {
-              role: 'system',
-              content: this.getSystemPrompt(context, command),
-            },
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
+          systemMessage: this.getSystemPrompt(context, command),
           temperature: 0.7,
-          max_tokens: 3000,
+          maxTokens: 3000,
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
-      return parseAIResponse(data.choices[0].message.content);
+
+      if (!data.success) {
+        console.error('API Error Data:', data);
+        throw new Error(`API error: ${data.error || 'Unknown error'}`);
+      }
+
+      return parseAIResponse(data.content);
     } catch (error) {
       console.error('OpenAI generation error:', error);
       throw error;

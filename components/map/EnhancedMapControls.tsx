@@ -64,9 +64,9 @@ export function EnhancedMapControls({ className = '' }: EnhancedMapControlsProps
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow-lg border border-gray-200 ${className}`}>
+    <div className={className}>
       {/* Main Controls */}
-      <div className="p-3 space-y-2">
+      <div className="space-y-2">
         {/* Zoom Controls */}
         <div className="flex flex-col space-y-1">
           <button
@@ -158,7 +158,7 @@ export function EnhancedMapControls({ className = '' }: EnhancedMapControlsProps
 
       {/* Layer Panel */}
       {showLayerPanel && (
-        <div className="border-t border-gray-200 p-3 bg-gray-50">
+        <div className="border-t border-gray-200 pt-3 mt-3 bg-gray-50 rounded-md p-3">
           <h4 className="text-sm font-medium text-gray-900 mb-2">Map Layers</h4>
           <div className="space-y-2 max-h-48 overflow-y-auto">
             {layers.map((layer) => (
@@ -197,7 +197,7 @@ export function EnhancedMapControls({ className = '' }: EnhancedMapControlsProps
 
       {/* Theme Panel */}
       {showThemePanel && (
-        <div className="border-t border-gray-200 p-3 bg-gray-50">
+        <div className="border-t border-gray-200 pt-3 mt-3 bg-gray-50 rounded-md p-3">
           <h4 className="text-sm font-medium text-gray-900 mb-2">Map Themes</h4>
           <div className="space-y-1">
             {['standard', 'fantasy', 'dark'].map((themeId) => (

@@ -14,8 +14,8 @@ import { TerrainLayers } from './TerrainLayers';
 import { LayerManager } from './LayerManager';
 import { DrawingTools } from './DrawingTools';
 import { FantasyTileLayerComponent } from './FantasyTileLayer';
-import { EnhancedMapControls } from './EnhancedMapControls';
-import { ImprovedDrawingTools } from './ImprovedDrawingTools';
+import { MapSidePanel, MobileMapSidePanel } from './MapSidePanel';
+import { QuickMapToolbar } from './QuickMapToolbar';
 import { MobileMapControls, TouchMapInteractions, MapGestureInstructions } from './MobileMapControls';
 import 'leaflet/dist/leaflet.css';
 
@@ -171,11 +171,14 @@ export function CampaignMap({ className = '' }: CampaignMapProps) {
         </div>
       )}
 
-      {/* Enhanced Map Controls */}
-      <EnhancedMapControls className="absolute top-4 right-4 z-[1000]" />
+      {/* Quick Map Toolbar - Always visible */}
+      <QuickMapToolbar className="absolute top-4 left-4 z-[1000]" />
 
-      {/* Improved Drawing Tools */}
-      <ImprovedDrawingTools className="absolute top-4 left-4 z-[1000] max-w-xs" />
+      {/* Map Side Panel - Desktop */}
+      {!isMobile && <MapSidePanel />}
+
+      {/* Map Side Panel - Mobile */}
+      {isMobile && <MobileMapSidePanel />}
 
       {/* Mobile map controls */}
       <MobileMapControls />

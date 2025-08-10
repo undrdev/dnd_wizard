@@ -171,8 +171,8 @@ export function ImprovedDrawingTools({ className = '' }: DrawingToolsProps) {
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow-lg border border-gray-200 p-4 ${className}`}>
-      <h3 className="text-sm font-medium text-gray-900 mb-3">Drawing Tools</h3>
+    <div className={className}>
+      {/* Drawing Tools content - header removed since it's in the panel */}
       
       {/* Drawing Status */}
       {isDrawing && (

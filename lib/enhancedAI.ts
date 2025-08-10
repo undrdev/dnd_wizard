@@ -47,11 +47,9 @@ export interface CampaignAct {
  * Enhanced AI service for generating complete D&D campaigns
  */
 export class EnhancedAIService {
-  private apiKey: string;
   private baseUrl: string;
 
   constructor() {
-    this.apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY || '';
     this.baseUrl = 'https://api.openai.com/v1';
   }
 
@@ -256,39 +254,41 @@ Format as JSON with acts array and overall plot information.`;
   }
 
   private async callOpenAI(prompt: string): Promise<string> {
-    if (!this.apiKey) {
-      throw new Error('OpenAI API key not configured');
+    try {
+      // Make request to our Firebase Function instead of directly to OpenAI
+      const response = await fetch('/api/generateContent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt,
+          model: 'gpt-4-turbo',
+          systemMessage: 'You are an expert D&D Dungeon Master with years of experience creating engaging campaigns. Always respond with valid JSON when requested.',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.success) {
+        console.error('API Error Data:', data);
+        throw new Error(`API error: ${data.error || 'Unknown error'}`);
+      }
+
+      return data.content || '';
+    } catch (error) {
+      console.error('OpenAI API call failed:', error);
+      if (error instanceof Error) {
+        throw new Error(`OpenAI API error: ${error.message}`);
+      }
+      throw new Error('OpenAI API error: Unknown error occurred');
     }
-
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert D&D Dungeon Master with years of experience creating engaging campaigns. Always respond with valid JSON when requested.',
-          },
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        temperature: 0.8,
-        max_tokens: 4000,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.choices[0]?.message?.content || '';
   }
 
   private parseCampaignResponse(response: string): any {
