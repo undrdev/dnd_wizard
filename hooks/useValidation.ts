@@ -5,7 +5,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { z } from 'zod';
-import { validate, validateField, ValidationResult, ValidationError } from '../lib/validation';
+import { validate, validateField, validateSafe, ValidationResult, ValidationError } from '../lib/validation';
 
 export interface UseValidationOptions<T> {
   schema: z.ZodSchema<T>;
@@ -192,22 +192,28 @@ export function useValidation<T>({
 
   const validateFieldInternal = useCallback(async (field: keyof T): Promise<boolean> => {
     const fieldValue = data[field];
-    const fieldSchema = schema.shape?.[field as string];
-    
-    if (!fieldSchema) {
-      return true; // No schema for field, consider valid
-    }
 
-    const error = validateField(fieldValue, fieldSchema, field as string);
-    
-    if (error) {
-      setFieldError(field, error.message);
-      return false;
-    } else {
+    // For individual field validation, we'll validate the entire object
+    // and extract the error for this specific field
+    try {
+      const result = validateSafe({ [field]: fieldValue }, z.object({ [field]: z.any() }));
+      if (result.success) {
+        clearFieldError(field);
+        return true;
+      } else {
+        const fieldError = result.errors?.find(e => e.field === field as string);
+        if (fieldError) {
+          setFieldError(field, fieldError.message);
+          return false;
+        }
+        return true;
+      }
+    } catch (error) {
+      // Fallback: just clear any existing error
       clearFieldError(field);
       return true;
     }
-  }, [data, schema, setFieldError, clearFieldError]);
+  }, [data, setFieldError, clearFieldError]);
 
   const validateFormInternal = useCallback(async (): Promise<ValidationResult<T>> => {
     setValidation(prev => ({ 
