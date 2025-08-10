@@ -4,6 +4,8 @@ import { LatLngBounds } from 'leaflet';
 import L from 'leaflet';
 import { useAppStore } from '@/stores/useAppStore';
 import { useMap as useMapHook } from '@/hooks/useMap';
+import { useMobile } from '@/hooks/useMobile';
+import { useAccessibility } from '@/hooks/useAccessibility';
 import { NPCMarkers } from './NPCMarkers';
 import { QuestMarkers } from './QuestMarkers';
 import { LocationMarkers } from './LocationMarkers';
@@ -11,6 +13,7 @@ import { CustomMarkers } from './CustomMarkers';
 import { TerrainLayers } from './TerrainLayers';
 import { LayerManager } from './LayerManager';
 import { DrawingTools } from './DrawingTools';
+import { MobileMapControls, TouchMapInteractions, MapGestureInstructions } from './MobileMapControls';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default markers in Next.js
@@ -66,6 +69,8 @@ function MapController() {
 export function CampaignMap({ className = '' }: CampaignMapProps) {
   const { mapState, currentCampaign } = useAppStore();
   const { setMapRef, initializeDefaultLayers, currentTheme } = useMapHook();
+  const { isMobile, isTablet } = useMobile();
+  const { announceToScreenReader } = useAccessibility();
   const mapRef = useRef<L.Map | null>(null);
 
   // Initialize default layers on mount
@@ -95,7 +100,14 @@ export function CampaignMap({ className = '' }: CampaignMapProps) {
   }
 
   return (
-    <div className={`relative ${className}`}>
+    <div
+      className={`relative ${className}`}
+      role="application"
+      aria-label="Interactive campaign map"
+    >
+      {/* Map gesture instructions for mobile users */}
+      <MapGestureInstructions />
+
       <MapContainer
         center={mapState.center}
         zoom={mapState.zoom}
@@ -107,7 +119,13 @@ export function CampaignMap({ className = '' }: CampaignMapProps) {
         ref={(map) => {
           mapRef.current = map;
           setMapRef(map);
+          if (map) {
+            announceToScreenReader('Map loaded and ready for interaction', 'polite');
+          }
         }}
+        // Accessibility attributes
+        aria-label="Campaign map"
+        tabIndex={0}
       >
         {/* Base tile layer - using theme-based layer */}
         <TileLayer
@@ -134,13 +152,23 @@ export function CampaignMap({ className = '' }: CampaignMapProps) {
         <AnnotationsLayer />
       </MapContainer>
 
-      {/* Map controls overlay */}
-      <div className="absolute top-4 right-4 z-[1000] space-y-2">
-        <MapControls />
-      </div>
+      {/* Touch interactions for mobile */}
+      <TouchMapInteractions />
 
-      {/* Map legend */}
-      <div className="absolute bottom-4 left-4 z-[1000]">
+      {/* Desktop map controls - hidden on mobile */}
+      {!isMobile && !isTablet && (
+        <div className="absolute top-4 right-4 z-[1000] space-y-2">
+          <MapControls />
+        </div>
+      )}
+
+      {/* Mobile map controls */}
+      <MobileMapControls />
+
+      {/* Map legend - responsive positioning */}
+      <div className={`absolute z-[1000] ${
+        isMobile ? 'bottom-20 left-4' : 'bottom-4 left-4'
+      }`}>
         <MapLegend />
       </div>
     </div>
