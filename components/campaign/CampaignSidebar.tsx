@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { XMarkIcon, ChatBubbleLeftIcon, UsersIcon, MapIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
 import { useAppStore } from '@/stores/useAppStore';
 import { AIChat } from '@/components/ai/AIChat';
+import { QuestList } from '@/components/quest/QuestList';
 import { NPCList } from '@/components/npc/NPCList';
 
 interface CampaignSidebarProps {
@@ -65,7 +66,7 @@ export function CampaignSidebar({ onClose }: CampaignSidebarProps) {
       <div className="flex-1 overflow-hidden">
         {activeTab === 'ai' && <AIChat />}
         {activeTab === 'npcs' && <NPCList className="h-full overflow-y-auto p-4" />}
-        {activeTab === 'quests' && <QuestList quests={quests} />}
+        {activeTab === 'quests' && <QuestList compact />}
         {activeTab === 'locations' && <LocationList locations={locations} />}
       </div>
     </div>
@@ -74,69 +75,7 @@ export function CampaignSidebar({ onClose }: CampaignSidebarProps) {
 
 
 
-// Quest List Component
-function QuestList({ quests }: { quests: any[] }) {
-  const { selectQuest, getSelectedQuest } = useAppStore();
-  const selectedQuest = getSelectedQuest();
 
-  const getImportanceColor = (importance: string) => {
-    switch (importance) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  return (
-    <div className="h-full overflow-y-auto p-4">
-      <div className="space-y-3">
-        {quests.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <ClipboardDocumentListIcon className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-            <p>No quests yet</p>
-            <p className="text-sm">Use the AI assistant to create some!</p>
-          </div>
-        ) : (
-          quests.map((quest) => (
-            <div
-              key={quest.id}
-              onClick={() => selectQuest(quest.id)}
-              className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                selectedQuest?.id === quest.id
-                  ? 'border-primary-500 bg-primary-50'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              <div className="flex items-start justify-between mb-2">
-                <h4 className="text-sm font-medium text-gray-900 flex-1 truncate">
-                  {quest.title}
-                </h4>
-                <span className={`text-xs px-2 py-1 rounded ${getImportanceColor(quest.importance)}`}>
-                  {quest.importance}
-                </span>
-              </div>
-              {quest.description && (
-                <p className="text-xs text-gray-600 line-clamp-2">
-                  {quest.description}
-                </p>
-              )}
-              <div className="flex items-center justify-between mt-2">
-                <span className={`text-xs px-2 py-1 rounded ${
-                  quest.status === 'active' ? 'bg-blue-100 text-blue-800' :
-                  quest.status === 'completed' ? 'bg-green-100 text-green-800' :
-                  'bg-red-100 text-red-800'
-                }`}>
-                  {quest.status}
-                </span>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
 
 // Location List Component
 function LocationList({ locations }: { locations: any[] }) {

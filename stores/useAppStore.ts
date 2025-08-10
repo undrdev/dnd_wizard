@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
+import { DEFAULT_MAP_THEMES } from '@/lib/mapThemes';
 import type {
   AppState,
   Campaign,
@@ -8,6 +9,9 @@ import type {
   Quest,
   User,
   MapState,
+  MapLayer,
+  MapAnnotation,
+  DrawingMode,
 } from '@/types';
 
 interface AppStore extends AppState {
@@ -63,6 +67,7 @@ interface AppStore extends AppState {
     npcs: NPC[];
     quests: Quest[];
   }) => void;
+  refreshCampaignData: () => Promise<void>;
 }
 
 const initialState: AppState = {
@@ -78,6 +83,13 @@ const initialState: AppState = {
     selectedNpc: undefined,
     selectedQuest: undefined,
     selectedLocation: undefined,
+    layers: [],
+    annotations: [],
+    drawingMode: 'none',
+    activeLayer: undefined,
+    measurementMode: false,
+    clusteringEnabled: true,
+    currentTheme: DEFAULT_MAP_THEMES[0],
   },
   isLoading: false,
   error: null,
@@ -241,6 +253,32 @@ export const useAppStore = create<AppStore>()(
             npcs: data.npcs,
             quests: data.quests,
           }),
+        refreshCampaignData: async () => {
+          const state = get();
+          if (!state.currentCampaign) return;
+
+          try {
+            // Import Firestore services dynamically to avoid SSR issues
+            const { CampaignService, LocationService, NPCService, QuestService } = await import('@/lib/firestore');
+
+            // Fetch fresh data from Firestore
+            const [locations, npcs, quests] = await Promise.all([
+              LocationService.getCampaignLocations(state.currentCampaign.id),
+              NPCService.getCampaignNPCs(state.currentCampaign.id),
+              QuestService.getCampaignQuests(state.currentCampaign.id),
+            ]);
+
+            // Update store with fresh data
+            set({
+              locations,
+              npcs,
+              quests,
+            });
+          } catch (error) {
+            console.error('Failed to refresh campaign data:', error);
+            set({ error: 'Failed to refresh campaign data' });
+          }
+        },
       }),
       {
         name: 'dnd-wizard-store',

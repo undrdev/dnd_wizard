@@ -70,6 +70,28 @@ export interface Quest {
   notes?: string;
 }
 
+// Enhanced Quest interface for Agent 3
+export interface EnhancedQuest extends Quest {
+  dependencies: string[]; // Quest IDs that must be completed first
+  milestones: QuestMilestone[];
+  xpReward: number;
+  goldReward: number;
+  itemRewards: string[];
+  completedAt?: Date;
+  playerNotes: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface QuestMilestone {
+  id: string;
+  title: string;
+  description: string;
+  completed: boolean;
+  completedAt?: Date;
+  order: number;
+}
+
 export interface AIContextMemory {
   campaignId: string;
   tokens: string[];
@@ -83,13 +105,42 @@ export interface AIMessage {
   timestamp: Date;
 }
 
-// UI and State Types
+// Enhanced UI and State Types
 export interface MapState {
   center: [number, number];
   zoom: number;
   selectedNpc?: string;
   selectedQuest?: string;
   selectedLocation?: string;
+  layers: MapLayer[];
+  annotations: MapAnnotation[];
+  drawingMode: DrawingMode;
+  activeLayer?: string;
+  measurementMode: boolean;
+  clusteringEnabled: boolean;
+  currentTheme: MapTheme;
+}
+
+export type DrawingMode = 'none' | 'line' | 'polygon' | 'circle' | 'rectangle' | 'text';
+
+export interface MapTheme {
+  id: string;
+  name: string;
+  baseLayer: string;
+  markerStyle: MarkerStyleConfig;
+}
+
+export interface MarkerStyleConfig {
+  npc: MarkerStyle;
+  quest: MarkerStyle;
+  location: MarkerStyle;
+}
+
+export interface MarkerStyle {
+  color: string;
+  size: number;
+  icon: string;
+  clusterColor?: string;
 }
 
 export interface User {
@@ -111,11 +162,29 @@ export interface AppState {
   error: string | null;
 }
 
+// Map Export Types
+export interface MapExportOptions {
+  format: 'png' | 'jpg' | 'pdf';
+  quality: number;
+  includeAnnotations: boolean;
+  includeLayers: string[];
+  width: number;
+  height: number;
+}
+
+// Measurement Types
+export interface MeasurementResult {
+  type: 'distance' | 'area';
+  value: number;
+  unit: string;
+  coordinates: LatLng[];
+}
+
 // API Types
 export interface AICommandRequest {
   command: string;
   campaignId: string;
-  context?: Partial<AIContextMemory>;
+  context?: any; // Allow any context format for flexibility
 }
 
 export interface AICommandResponse {
@@ -195,13 +264,56 @@ export interface ImportOptions {
   importAIContext: boolean;
 }
 
-// Map Layer Types
+// Enhanced Map Layer Types
 export interface MapLayer {
   id: string;
   name: string;
+  type: 'terrain' | 'political' | 'custom' | 'annotations';
   visible: boolean;
+  opacity: number;
   minZoom?: number;
   maxZoom?: number;
+  data?: any;
+  url?: string;
+}
+
+export interface MapAnnotation {
+  id: string;
+  campaignId: string;
+  type: 'line' | 'polygon' | 'circle' | 'text' | 'rectangle';
+  coordinates: LatLng[];
+  style: AnnotationStyle;
+  label?: string;
+  description?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AnnotationStyle {
+  color: string;
+  fillColor?: string;
+  weight: number;
+  opacity: number;
+  fillOpacity?: number;
+  dashArray?: string;
+  fontSize?: number;
+  fontFamily?: string;
+}
+
+export interface LatLng {
+  lat: number;
+  lng: number;
+}
+
+export interface TerrainLayer extends MapLayer {
+  type: 'terrain';
+  terrainType: 'topographic' | 'satellite' | 'hybrid' | 'physical';
+}
+
+export interface BiomeLayer extends MapLayer {
+  type: 'custom';
+  biomeType: 'forest' | 'desert' | 'mountain' | 'ocean' | 'grassland' | 'tundra';
+  geoJsonData?: any;
 }
 
 export interface NPCMarker {
@@ -238,6 +350,67 @@ export interface QuestFormData {
   involvedNpcIds: string[];
   locationIds: string[];
   rewards?: string;
+}
+
+// Enhanced Quest Form Data for Agent 3
+export interface EnhancedQuestFormData {
+  title: string;
+  description: string;
+  importance: Quest['importance'];
+  status: Quest['status'];
+  startNpcId: string;
+  involvedNpcIds: string[];
+  locationIds: string[];
+  dependencies: string[];
+  milestones: Omit<QuestMilestone, 'id'>[];
+  xpReward: number;
+  goldReward: number;
+  itemRewards: string[];
+  rewards?: string;
+  notes?: string;
+  playerNotes: string;
+}
+
+// Quest Filter and Search Types
+export interface QuestFilters {
+  status?: Quest['status'][];
+  importance?: Quest['importance'][];
+  involvedNpcIds?: string[];
+  locationIds?: string[];
+  hasRewards?: boolean;
+  hasDependencies?: boolean;
+  completedDateRange?: {
+    start?: Date;
+    end?: Date;
+  };
+}
+
+export interface QuestSearchOptions {
+  query?: string;
+  filters?: QuestFilters;
+  sortBy?: 'title' | 'importance' | 'status' | 'createdAt' | 'completedAt' | 'progress';
+  sortOrder?: 'asc' | 'desc';
+  limit?: number;
+  offset?: number;
+}
+
+// Quest Progress and Timeline Types
+export interface QuestProgress {
+  questId: string;
+  totalMilestones: number;
+  completedMilestones: number;
+  percentage: number;
+  canComplete: boolean; // Based on dependencies
+}
+
+export interface QuestTimelineEvent {
+  id: string;
+  questId: string;
+  type: 'created' | 'milestone_completed' | 'status_changed' | 'dependency_added' | 'completed';
+  title: string;
+  description: string;
+  timestamp: Date;
+  metadata?: Record<string, any>;
 }
 
 export interface LocationFormData {
@@ -284,3 +457,4 @@ export type CreateCampaignData = Omit<Campaign, 'id' | 'createdAt' | 'updatedAt'
 export type CreateLocationData = Omit<Location, 'id'>;
 export type CreateNPCData = Omit<NPC, 'id'>;
 export type CreateQuestData = Omit<Quest, 'id'>;
+export type CreateEnhancedQuestData = Omit<EnhancedQuest, 'id' | 'createdAt' | 'updatedAt'>;
