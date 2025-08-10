@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can only access their own data
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Campaigns - users can only access campaigns they own
+    match /campaigns/{campaignId} {
+      allow read, write: if isOwner(resource.data.ownerId);
+      allow create: if isOwner(request.resource.data.ownerId);
+    }
+
+    // Locations - users can only access locations in their campaigns
+    match /locations/{locationId} {
+      allow read, write: if isOwner(get(/databases/$(database)/documents/campaigns/$(resource.data.campaignId)).data.ownerId);
+      allow create: if isOwner(get(/databases/$(database)/documents/campaigns/$(request.resource.data.campaignId)).data.ownerId);
+    }
+
+    // NPCs - users can only access NPCs in their campaigns
+    match /npcs/{npcId} {
+      allow read, write: if isOwner(get(/databases/$(database)/documents/campaigns/$(resource.data.campaignId)).data.ownerId);
+      allow create: if isOwner(get(/databases/$(database)/documents/campaigns/$(request.resource.data.campaignId)).data.ownerId);
+    }
+
+    // Quests - users can only access quests in their campaigns
+    match /quests/{questId} {
+      allow read, write: if isOwner(get(/databases/$(database)/documents/campaigns/$(resource.data.campaignId)).data.ownerId);
+      allow create: if isOwner(get(/databases/$(database)/documents/campaigns/$(request.resource.data.campaignId)).data.ownerId);
+    }
+
+    // AI Context - users can only access AI context for their campaigns
+    match /aiContext/{campaignId} {
+      allow read, write: if isOwner(get(/databases/$(database)/documents/campaigns/$(campaignId)).data.ownerId);
+      allow create: if isOwner(get(/databases/$(database)/documents/campaigns/$(campaignId)).data.ownerId);
+    }
+  }
+}

@@ -1,0 +1,16 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Users can only upload/access files in their own folders
+    match /users/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Campaign assets - users can only access assets for campaigns they own
+    match /campaigns/{campaignId}/{allPaths=**} {
+      allow read, write: if request.auth != null && 
+        exists(/databases/(default)/documents/campaigns/$(campaignId)) &&
+        get(/databases/(default)/documents/campaigns/$(campaignId)).data.ownerId == request.auth.uid;
+    }
+  }
+}

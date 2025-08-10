@@ -1,0 +1,10 @@
+# This is a placeholder for the Leaflet marker icon
+# In a real implementation, you would copy the actual PNG files from node_modules/leaflet/dist/images/
+# to the public/leaflet/ directory
+
+# Required files:
+# - marker-icon.png
+# - marker-icon-2x.png  
+# - marker-shadow.png
+
+# For now, create empty files or copy from leaflet package after npm install
