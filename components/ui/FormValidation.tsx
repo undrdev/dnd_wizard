@@ -288,7 +288,7 @@ export function ValidatedField<T>({
       setError(null);
     } catch (err) {
       if (err instanceof z.ZodError) {
-        setError(err.errors[0]?.message || 'Invalid value');
+        setError(err.issues[0]?.message || 'Invalid value');
       }
     }
   }, [schema]);
