@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { XMarkIcon, ChatBubbleLeftIcon, UsersIcon, MapIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
 import { useAppStore } from '@/stores/useAppStore';
 import { AIChat } from '@/components/ai/AIChat';
+import { NPCList } from '@/components/npc/NPCList';
 
 interface CampaignSidebarProps {
   onClose: () => void;
@@ -63,7 +64,7 @@ export function CampaignSidebar({ onClose }: CampaignSidebarProps) {
       {/* Content */}
       <div className="flex-1 overflow-hidden">
         {activeTab === 'ai' && <AIChat />}
-        {activeTab === 'npcs' && <NPCList npcs={npcs} />}
+        {activeTab === 'npcs' && <NPCList className="h-full overflow-y-auto p-4" />}
         {activeTab === 'quests' && <QuestList quests={quests} />}
         {activeTab === 'locations' && <LocationList locations={locations} />}
       </div>
@@ -71,51 +72,7 @@ export function CampaignSidebar({ onClose }: CampaignSidebarProps) {
   );
 }
 
-// NPC List Component
-function NPCList({ npcs }: { npcs: any[] }) {
-  const { selectNPC, getSelectedNPC } = useAppStore();
-  const selectedNPC = getSelectedNPC();
 
-  return (
-    <div className="h-full overflow-y-auto p-4">
-      <div className="space-y-3">
-        {npcs.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <UsersIcon className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-            <p>No NPCs yet</p>
-            <p className="text-sm">Use the AI assistant to create some!</p>
-          </div>
-        ) : (
-          npcs.map((npc) => (
-            <div
-              key={npc.id}
-              onClick={() => selectNPC(npc.id)}
-              className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                selectedNPC?.id === npc.id
-                  ? 'border-primary-500 bg-primary-50'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium text-gray-900 truncate">
-                    {npc.name}
-                  </h4>
-                  <p className="text-xs text-gray-500">{npc.role}</p>
-                  {npc.personality && (
-                    <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                      {npc.personality}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
 
 // Quest List Component
 function QuestList({ quests }: { quests: any[] }) {

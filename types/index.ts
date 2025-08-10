@@ -36,6 +36,26 @@ export interface NPC {
   portraitUrl?: string;
 }
 
+// Enhanced NPC interface for AGENT 2
+export interface EnhancedNPC extends NPC {
+  relationships: NPCRelationship[];
+  notes: string;
+  backstory: string;
+  goals: string[];
+  secrets: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface NPCRelationship {
+  id: string;
+  targetNpcId: string;
+  type: 'ally' | 'enemy' | 'neutral' | 'romantic' | 'family' | 'business';
+  strength: number; // 1-10
+  description: string;
+  createdAt: Date;
+}
+
 export interface Quest {
   id: string;
   campaignId: string;
