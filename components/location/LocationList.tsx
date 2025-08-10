@@ -79,7 +79,9 @@ export function LocationList({
   };
 
   const handleFilterChange = (field: keyof LocationFilterCriteria, value: any) => {
-    setFilterCriteria(prev => ({ ...prev, [field]: value }));
+    const newCriteria = { ...filterCriteria };
+    (newCriteria as any)[field] = value;
+    setFilterCriteria(newCriteria);
   };
 
   const clearAllFilters = () => {

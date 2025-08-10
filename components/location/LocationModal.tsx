@@ -97,7 +97,15 @@ export function LocationModal({
       if (isEditing && location) {
         success = await updateLocation(location.id, formData);
       } else {
-        success = await createLocation(formData);
+        const createData = {
+          ...formData,
+          campaignId: '', // This will be set in the hook
+          npcs: [],
+          quests: [],
+          subLocations: [],
+          images: [],
+        };
+        success = await createLocation(createData);
       }
       
       if (success) {

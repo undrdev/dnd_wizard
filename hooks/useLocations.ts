@@ -148,7 +148,13 @@ export function useLocations(): UseLocationsReturn {
         const parentLocation = locations.find(loc => loc.id === data.parentLocationId);
         if (parentLocation) {
           const updatedSubLocations = [...parentLocation.subLocations, locationId];
-          await updateLocation(data.parentLocationId, { subLocations: updatedSubLocations });
+          try {
+            await LocationService.updateLocation(data.parentLocationId, { subLocations: updatedSubLocations } as any);
+            updateStoreLocation(data.parentLocationId, { subLocations: updatedSubLocations } as any);
+          } catch (error) {
+            console.error('Error updating parent location:', error);
+            // Don't fail the creation if parent update fails
+          }
         }
       }
 
@@ -160,7 +166,7 @@ export function useLocations(): UseLocationsReturn {
     } finally {
       setIsCreating(false);
     }
-  }, [currentCampaign, addLocation, setError, locations, updateLocation]);
+  }, [currentCampaign, addLocation, setError, locations, updateStoreLocation]);
 
   // Update location
   const updateLocation = useCallback(async (
@@ -216,7 +222,13 @@ export function useLocations(): UseLocationsReturn {
         const parentLocation = locations.find(loc => loc.id === location.parentLocationId);
         if (parentLocation) {
           const updatedSubLocations = parentLocation.subLocations.filter(id => id !== locationId);
-          await updateLocation(location.parentLocationId, { subLocations: updatedSubLocations });
+          try {
+            await LocationService.updateLocation(location.parentLocationId, { subLocations: updatedSubLocations } as any);
+            updateStoreLocation(location.parentLocationId, { subLocations: updatedSubLocations } as any);
+          } catch (error) {
+            console.error('Error updating parent location:', error);
+            // Don't fail the deletion if parent update fails
+          }
         }
       }
 
@@ -228,7 +240,7 @@ export function useLocations(): UseLocationsReturn {
     } finally {
       setIsDeleting(false);
     }
-  }, [locations, deleteStoreLocation, setError, updateLocation]);
+  }, [locations, deleteStoreLocation, setError, updateStoreLocation]);
 
   // Bulk delete locations
   const bulkDeleteLocations = useCallback(async (locationIds: string[]): Promise<boolean> => {
@@ -248,7 +260,7 @@ export function useLocations(): UseLocationsReturn {
 
   // Add image to location
   const addImage = useCallback(async (
-    locationId: string, 
+    locationId: string,
     image: LocationImage
   ): Promise<boolean> => {
     const location = locations.find(loc => loc.id === locationId);
@@ -258,8 +270,17 @@ export function useLocations(): UseLocationsReturn {
     }
 
     const updatedImages = [...location.images, image];
-    return updateLocation(locationId, { images: updatedImages });
-  }, [locations, updateLocation, setError]);
+
+    try {
+      await LocationService.updateLocation(locationId, { images: updatedImages } as any);
+      updateStoreLocation(locationId, { images: updatedImages } as any);
+      return true;
+    } catch (error) {
+      console.error('Error adding image:', error);
+      setError('Failed to add image');
+      return false;
+    }
+  }, [locations, setError, updateStoreLocation]);
 
   // Update image
   const updateImage = useCallback(async (
@@ -276,8 +297,17 @@ export function useLocations(): UseLocationsReturn {
     const updatedImages = location.images.map(img =>
       img.id === imageId ? { ...img, ...updates } : img
     );
-    return updateLocation(locationId, { images: updatedImages });
-  }, [locations, updateLocation, setError]);
+
+    try {
+      await LocationService.updateLocation(locationId, { images: updatedImages } as any);
+      updateStoreLocation(locationId, { images: updatedImages } as any);
+      return true;
+    } catch (error) {
+      console.error('Error updating image:', error);
+      setError('Failed to update image');
+      return false;
+    }
+  }, [locations, setError, updateStoreLocation]);
 
   // Remove image
   const removeImage = useCallback(async (
@@ -291,8 +321,17 @@ export function useLocations(): UseLocationsReturn {
     }
 
     const updatedImages = location.images.filter(img => img.id !== imageId);
-    return updateLocation(locationId, { images: updatedImages });
-  }, [locations, updateLocation, setError]);
+
+    try {
+      await LocationService.updateLocation(locationId, { images: updatedImages } as any);
+      updateStoreLocation(locationId, { images: updatedImages } as any);
+      return true;
+    } catch (error) {
+      console.error('Error removing image:', error);
+      setError('Failed to remove image');
+      return false;
+    }
+  }, [locations, setError, updateStoreLocation]);
 
   // Set primary image
   const setPrimaryImage = useCallback(async (
@@ -309,8 +348,17 @@ export function useLocations(): UseLocationsReturn {
       ...img,
       isPrimary: img.id === imageId,
     }));
-    return updateLocation(locationId, { images: updatedImages });
-  }, [locations, updateLocation, setError]);
+
+    try {
+      await LocationService.updateLocation(locationId, { images: updatedImages } as any);
+      updateStoreLocation(locationId, { images: updatedImages } as any);
+      return true;
+    } catch (error) {
+      console.error('Error setting primary image:', error);
+      setError('Failed to set primary image');
+      return false;
+    }
+  }, [locations, setError, updateStoreLocation]);
 
   // Move location in hierarchy
   const moveLocation = useCallback(async (
@@ -335,7 +383,8 @@ export function useLocations(): UseLocationsReturn {
         const oldParent = locations.find(loc => loc.id === location.parentLocationId);
         if (oldParent) {
           const updatedSubLocations = oldParent.subLocations.filter(id => id !== locationId);
-          await updateLocation(location.parentLocationId, { subLocations: updatedSubLocations });
+          await LocationService.updateLocation(location.parentLocationId, { subLocations: updatedSubLocations } as any);
+          updateStoreLocation(location.parentLocationId, { subLocations: updatedSubLocations } as any);
         }
       }
 
@@ -344,19 +393,21 @@ export function useLocations(): UseLocationsReturn {
         const newParent = locations.find(loc => loc.id === newParentId);
         if (newParent) {
           const updatedSubLocations = [...newParent.subLocations, locationId];
-          await updateLocation(newParentId, { subLocations: updatedSubLocations });
+          await LocationService.updateLocation(newParentId, { subLocations: updatedSubLocations } as any);
+          updateStoreLocation(newParentId, { subLocations: updatedSubLocations } as any);
         }
       }
 
       // Update location's parent
-      await updateLocation(locationId, { parentLocationId: newParentId });
+      await LocationService.updateLocation(locationId, { parentLocationId: newParentId } as any);
+      updateStoreLocation(locationId, { parentLocationId: newParentId } as any);
       return true;
     } catch (error) {
       console.error('Error moving location:', error);
       setError('Failed to move location');
       return false;
     }
-  }, [locations, updateLocation, setError]);
+  }, [locations, setError, updateStoreLocation]);
 
   // Get locations by parent
   const getLocationsByParent = useCallback((parentId?: string): EnhancedLocation[] => {
