@@ -3,6 +3,7 @@ import { useAppStore } from '@/stores/useAppStore';
 import { CampaignService, LocationService, NPCService, QuestService } from '@/lib/firestore';
 import { CampaignMap } from '@/components/map/CampaignMap';
 import { CampaignSidebar } from './CampaignSidebar';
+import { ImportExportModal } from './ImportExportModal';
 
 export function CampaignDashboard() {
   const {
@@ -127,13 +128,7 @@ export function CampaignDashboard() {
 
 function CampaignActions() {
   const { currentCampaign } = useAppStore();
-  const [showExportMenu, setShowExportMenu] = useState(false);
-
-  const handleExportJSON = () => {
-    // TODO: Implement export functionality
-    console.log('Export JSON');
-    setShowExportMenu(false);
-  };
+  const [showImportExportModal, setShowImportExportModal] = useState(false);
 
   const handleSaveToCloud = async () => {
     // TODO: Implement save to cloud functionality
@@ -141,35 +136,27 @@ function CampaignActions() {
   };
 
   return (
-    <div className="flex items-center space-x-2">
-      <button
-        onClick={handleSaveToCloud}
-        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-      >
-        💾 Save
-      </button>
-
-      <div className="relative">
+    <>
+      <div className="flex items-center space-x-2">
         <button
-          onClick={() => setShowExportMenu(!showExportMenu)}
+          onClick={handleSaveToCloud}
           className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         >
-          📤 Export
+          💾 Save
         </button>
 
-        {showExportMenu && (
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
-            <div className="py-1">
-              <button
-                onClick={handleExportJSON}
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                Export as JSON
-              </button>
-            </div>
-          </div>
-        )}
+        <button
+          onClick={() => setShowImportExportModal(true)}
+          className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+        >
+          📤 Import/Export
+        </button>
       </div>
-    </div>
+
+      <ImportExportModal
+        isOpen={showImportExportModal}
+        onClose={() => setShowImportExportModal(false)}
+      />
+    </>
   );
 }
