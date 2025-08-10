@@ -138,10 +138,12 @@ export function ValidatedForm<T>({
         return children;
       }
 
+      const stringValue = String(value || '');
+
       const commonProps = {
         id: name as string,
-        value,
-        onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => 
+        value: stringValue,
+        onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
           handleChange(e.target.value),
         onBlur: handleBlur,
         placeholder,
