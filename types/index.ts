@@ -24,6 +24,31 @@ export interface Location {
   quests: string[]; // Quest IDs
 }
 
+// Enhanced Location interface for AGENT 4
+export interface EnhancedLocation extends Location {
+  parentLocationId?: string;
+  subLocations: string[]; // Child location IDs
+  images: LocationImage[];
+  detailedDescription: string;
+  history: string;
+  rumors: string[];
+  secrets: string[];
+  climate: string;
+  population?: number;
+  government?: string;
+  economy?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface LocationImage {
+  id: string;
+  url: string;
+  caption: string;
+  isPrimary: boolean;
+  uploadedAt: Date;
+}
+
 export interface NPC {
   id: string;
   campaignId: string;
@@ -458,3 +483,50 @@ export type CreateLocationData = Omit<Location, 'id'>;
 export type CreateNPCData = Omit<NPC, 'id'>;
 export type CreateQuestData = Omit<Quest, 'id'>;
 export type CreateEnhancedQuestData = Omit<EnhancedQuest, 'id' | 'createdAt' | 'updatedAt'>;
+export type CreateEnhancedLocationData = Omit<EnhancedLocation, 'id' | 'createdAt' | 'updatedAt'>;
+
+// Location-specific types for AGENT 4
+export interface LocationFilterCriteria {
+  type?: Location['type'][];
+  parentLocationId?: string;
+  hasSubLocations?: boolean;
+  hasImages?: boolean;
+  populationRange?: {
+    min?: number;
+    max?: number;
+  };
+  climate?: string[];
+}
+
+export type LocationSortBy =
+  | 'name'
+  | 'type'
+  | 'population'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'subLocationCount';
+
+export interface LocationHierarchyNode {
+  location: EnhancedLocation;
+  children: LocationHierarchyNode[];
+  depth: number;
+}
+
+export interface LocationFormData {
+  name: string;
+  type: Location['type'];
+  coords: {
+    lat: number;
+    lng: number;
+  };
+  description: string;
+  detailedDescription: string;
+  history: string;
+  rumors: string[];
+  secrets: string[];
+  climate: string;
+  population?: number;
+  government?: string;
+  economy?: string;
+  parentLocationId?: string;
+}
