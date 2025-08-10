@@ -1,6 +1,14 @@
-// Firebase Storage temporarily disabled for MVP deployment
-// This file provides stub implementations to prevent build errors
-
+import {
+  ref,
+  uploadBytes,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject,
+  listAll,
+  getMetadata,
+  updateMetadata,
+} from 'firebase/storage';
+import { storage } from './firebase';
 import { auth } from './firebase';
 
 export interface UploadOptions {
@@ -44,8 +52,8 @@ export interface BulkUploadResult {
 }
 
 /**
- * Image Storage Service - MVP Version (Storage Disabled)
- * Provides stub implementations to prevent build errors
+ * Image Storage Service
+ * Handles all image upload, storage, and management operations
  */
 class ImageStorageService {
   private readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -53,7 +61,6 @@ class ImageStorageService {
 
   /**
    * Upload an image file to Firebase Storage
-   * TEMPORARILY DISABLED FOR MVP - Returns error message
    */
   async uploadImage(
     file: File,
@@ -62,32 +69,121 @@ class ImageStorageService {
     options: UploadOptions = {},
     onProgress?: (progress: UploadProgress) => void
   ): Promise<UploadResult> {
-    throw new Error('Image uploads are temporarily disabled. Feature coming soon!');
+    if (!auth.currentUser) {
+      throw new Error('User must be authenticated to upload images');
+    }
+
+    // Validate file
+    this.validateFile(file);
+
+    // Generate storage path
+    const path = this.generatePath(type, entityId, file.name);
+    const storageRef = ref(storage, path);
+
+    // Process image if options are provided
+    let processedFile = file;
+    if (options.resize || options.quality || options.format) {
+      const { processImage } = await import('./imageProcessing');
+      processedFile = await processImage(file, options);
+    }
+
+    // Upload file with progress tracking
+    const uploadTask = uploadBytesResumable(storageRef, processedFile, {
+      contentType: processedFile.type,
+      customMetadata: {
+        originalName: file.name,
+        uploadedBy: auth.currentUser.uid,
+        entityType: type,
+        entityId: entityId,
+      },
+    });
+
+    return new Promise((resolve, reject) => {
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          if (onProgress) {
+            const progress: UploadProgress = {
+              bytesTransferred: snapshot.bytesTransferred,
+              totalBytes: snapshot.totalBytes,
+              progress: (snapshot.bytesTransferred / snapshot.totalBytes) * 100,
+              state: snapshot.state as any,
+            };
+            onProgress(progress);
+          }
+        },
+        (error) => {
+          console.error('Upload error:', error);
+          reject(new Error(`Upload failed: ${error.message}`));
+        },
+        async () => {
+          try {
+            const url = await getDownloadURL(uploadTask.snapshot.ref);
+            const metadata = await getMetadata(uploadTask.snapshot.ref);
+
+            let thumbnailUrl: string | undefined;
+            if (options.generateThumbnail) {
+              thumbnailUrl = await this.generateThumbnail(
+                processedFile,
+                type,
+                entityId,
+                options.thumbnailSize || { width: 150, height: 150 }
+              );
+            }
+
+            const result: UploadResult = {
+              url,
+              path,
+              thumbnailUrl,
+              metadata: {
+                size: metadata.size,
+                contentType: metadata.contentType || processedFile.type,
+                timeCreated: metadata.timeCreated,
+                name: metadata.name,
+              },
+            };
+
+            resolve(result);
+          } catch (error) {
+            reject(error);
+          }
+        }
+      );
+    });
   }
 
   /**
    * Delete an image from Firebase Storage
-   * TEMPORARILY DISABLED FOR MVP
    */
   async deleteImage(path: string): Promise<void> {
-    throw new Error('Image deletion is temporarily disabled. Feature coming soon!');
+    if (!auth.currentUser) {
+      throw new Error('User must be authenticated to delete images');
+    }
+
+    try {
+      const imageRef = ref(storage, path);
+      await deleteObject(imageRef);
+    } catch (error) {
+      console.error('Delete error:', error);
+      throw new Error(`Failed to delete image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   /**
    * Get storage quota information
-   * TEMPORARILY DISABLED FOR MVP
    */
   async getStorageQuota(): Promise<StorageQuota> {
+    // Note: Firebase Storage doesn't provide direct quota API
+    // This is a placeholder implementation
     return {
       used: 0,
-      available: 0,
+      available: 1024 * 1024 * 1024, // 1GB placeholder
       percentage: 0,
     };
   }
 
   /**
    * Upload multiple images in bulk
-   * TEMPORARILY DISABLED FOR MVP
    */
   async uploadBulk(
     files: File[],
@@ -96,29 +192,112 @@ class ImageStorageService {
     options: UploadOptions = {},
     onProgress?: (progress: UploadProgress) => void
   ): Promise<BulkUploadResult> {
-    throw new Error('Bulk image uploads are temporarily disabled. Feature coming soon!');
+    const results: UploadResult[] = [];
+    const failed: Array<{ file: File; error: string }> = [];
+    let completedFiles = 0;
+    const totalFiles = files.length;
+
+    for (const file of files) {
+      try {
+        const result = await this.uploadImage(
+          file,
+          type,
+          entityId,
+          options,
+          (progress: UploadProgress) => {
+            const fileProgress = progress.progress / totalFiles;
+            const totalProgress = (completedFiles / totalFiles) * 100 + fileProgress;
+            if (onProgress) {
+              onProgress({
+                ...progress,
+                progress: Math.min(totalProgress, 100),
+              });
+            }
+          }
+        );
+
+        results.push(result);
+        completedFiles++;
+      } catch (error) {
+        failed.push({
+          file,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        completedFiles++;
+      }
+    }
+
+    return {
+      successful: results,
+      failed,
+      totalUploaded: results.length,
+      totalFailed: failed.length,
+    };
   }
 
   /**
    * List all images for an entity
-   * TEMPORARILY DISABLED FOR MVP
    */
   async listImages(
     type: 'npc' | 'location' | 'campaign' | 'user',
     entityId: string
   ): Promise<UploadResult[]> {
-    return [];
+    if (!auth.currentUser) {
+      throw new Error('User must be authenticated to list images');
+    }
+
+    try {
+      const folderRef = ref(storage, `${type}s/${entityId}`);
+      const listResult = await listAll(folderRef);
+
+      const images: UploadResult[] = [];
+      for (const itemRef of listResult.items) {
+        try {
+          const [url, metadata] = await Promise.all([
+            getDownloadURL(itemRef),
+            getMetadata(itemRef),
+          ]);
+
+          images.push({
+            url,
+            path: itemRef.fullPath,
+            metadata: {
+              size: metadata.size,
+              contentType: metadata.contentType || 'image/jpeg',
+              timeCreated: metadata.timeCreated,
+              name: metadata.name,
+            },
+          });
+        } catch (error) {
+          console.warn(`Failed to get metadata for ${itemRef.fullPath}:`, error);
+        }
+      }
+
+      return images;
+    } catch (error) {
+      console.error('List images error:', error);
+      throw new Error(`Failed to list images: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   /**
    * Update image metadata
-   * TEMPORARILY DISABLED FOR MVP
    */
   async updateImageMetadata(
     path: string,
     metadata: Record<string, string>
   ): Promise<void> {
-    throw new Error('Image metadata updates are temporarily disabled. Feature coming soon!');
+    if (!auth.currentUser) {
+      throw new Error('User must be authenticated to update metadata');
+    }
+
+    try {
+      const imageRef = ref(storage, path);
+      await updateMetadata(imageRef, { customMetadata: metadata });
+    } catch (error) {
+      console.error('Update metadata error:', error);
+      throw new Error(`Failed to update metadata: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   /**
@@ -152,10 +331,40 @@ class ImageStorageService {
   }
 
   /**
+   * Generate a thumbnail for an image
+   */
+  private async generateThumbnail(
+    file: File,
+    type: 'npc' | 'location' | 'campaign' | 'user',
+    entityId: string,
+    size: { width: number; height: number }
+  ): Promise<string> {
+    const { processImage } = await import('./imageProcessing');
+    
+    const thumbnailFile = await processImage(file, {
+      resize: size,
+      quality: 0.8,
+      format: 'jpeg',
+    });
+
+    const thumbnailPath = this.generatePath(
+      type,
+      entityId,
+      `thumb_${file.name.replace(/\.[^/.]+$/, '.jpg')}`
+    );
+    
+    const thumbnailRef = ref(storage, thumbnailPath);
+    await uploadBytes(thumbnailRef, thumbnailFile);
+    
+    return getDownloadURL(thumbnailRef);
+  }
+
+  /**
    * Clean up orphaned images
-   * TEMPORARILY DISABLED FOR MVP
    */
   async cleanupOrphanedImages(): Promise<number> {
+    // Implementation would require checking against database records
+    // This is a placeholder for future implementation
     return 0;
   }
 }

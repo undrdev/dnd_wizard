@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { PlusIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, PencilIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { useAppStore } from '@/stores/useAppStore';
 import { CampaignService } from '@/lib/firestore';
+import { FullCampaignGenerator } from './FullCampaignGenerator';
 import type { Campaign } from '@/types';
 
 interface CampaignListProps {
@@ -12,6 +13,7 @@ interface CampaignListProps {
 export function CampaignList({ onCreateNew, onSelectCampaign }: CampaignListProps) {
   const { campaigns, currentCampaign, user, deleteCampaign, setLoading, setError } = useAppStore();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showFullGenerator, setShowFullGenerator] = useState(false);
 
   const handleDeleteCampaign = async (campaignId: string, campaignTitle: string) => {
     if (!confirm(`Are you sure you want to delete "${campaignTitle}"? This action cannot be undone.`)) {
@@ -77,13 +79,20 @@ export function CampaignList({ onCreateNew, onSelectCampaign }: CampaignListProp
           <p className="mt-1 text-sm text-gray-500">
             Get started by creating your first campaign.
           </p>
-          <div className="mt-6">
+          <div className="mt-6 flex space-x-3">
             <button
               onClick={onCreateNew}
               className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
             >
               <PlusIcon className="h-4 w-4 mr-2" />
               Create Campaign
+            </button>
+            <button
+              onClick={() => setShowFullGenerator(true)}
+              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+            >
+              <SparklesIcon className="h-4 w-4 mr-2" />
+              Generate Full Campaign
             </button>
           </div>
         </div>
@@ -101,6 +110,12 @@ export function CampaignList({ onCreateNew, onSelectCampaign }: CampaignListProp
           ))}
         </div>
       )}
+
+      {/* Full Campaign Generator Modal */}
+      <FullCampaignGenerator
+        isOpen={showFullGenerator}
+        onClose={() => setShowFullGenerator(false)}
+      />
     </div>
   );
 }

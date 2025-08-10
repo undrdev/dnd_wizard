@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import { onRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import cors from 'cors';
 
@@ -13,19 +13,19 @@ import { processCommand } from './commands';
 import { generateContent } from './ai';
 import { getCampaignData, saveMapState } from './campaign';
 
-// Export Cloud Functions
-export const processCommandFunction = functions.https.onRequest((req, res) => {
+// Export Cloud Functions (2nd generation)
+export const processCommandFunction = onRequest((req, res) => {
   corsHandler(req, res, () => processCommand(req, res));
 });
 
-export const generateContentFunction = functions.https.onRequest((req, res) => {
+export const generateContentFunction = onRequest((req, res) => {
   corsHandler(req, res, () => generateContent(req, res));
 });
 
-export const getCampaignDataFunction = functions.https.onRequest((req, res) => {
+export const getCampaignDataFunction = onRequest((req, res) => {
   corsHandler(req, res, () => getCampaignData(req, res));
 });
 
-export const saveMapStateFunction = functions.https.onRequest((req, res) => {
+export const saveMapStateFunction = onRequest((req, res) => {
   corsHandler(req, res, () => saveMapState(req, res));
 });

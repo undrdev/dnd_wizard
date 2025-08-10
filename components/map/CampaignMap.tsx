@@ -14,6 +14,8 @@ import { TerrainLayers } from './TerrainLayers';
 import { LayerManager } from './LayerManager';
 import { DrawingTools } from './DrawingTools';
 import { FantasyTileLayerComponent } from './FantasyTileLayer';
+import { EnhancedMapControls } from './EnhancedMapControls';
+import { ImprovedDrawingTools } from './ImprovedDrawingTools';
 import { MobileMapControls, TouchMapInteractions, MapGestureInstructions } from './MobileMapControls';
 import 'leaflet/dist/leaflet.css';
 
@@ -168,6 +170,12 @@ export function CampaignMap({ className = '' }: CampaignMapProps) {
           <MapControls />
         </div>
       )}
+
+      {/* Enhanced Map Controls */}
+      <EnhancedMapControls className="absolute top-4 right-4 z-[1000]" />
+
+      {/* Improved Drawing Tools */}
+      <ImprovedDrawingTools className="absolute top-4 left-4 z-[1000] max-w-xs" />
 
       {/* Mobile map controls */}
       <MobileMapControls />

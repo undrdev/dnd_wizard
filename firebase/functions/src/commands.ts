@@ -1,4 +1,4 @@
-import { Request, Response } from 'firebase-functions';
+import { Request, Response } from 'express';
 import * as admin from 'firebase-admin';
 
 const db = admin.firestore();
