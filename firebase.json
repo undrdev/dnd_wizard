@@ -20,6 +20,8 @@
     ]
   },
   "firestore": {
+    "database": "(default)",
+    "location": "nam5",
     "rules": "firebase/firestore/firestore.rules",
     "indexes": "firebase/firestore/firestore.indexes.json"
   },
