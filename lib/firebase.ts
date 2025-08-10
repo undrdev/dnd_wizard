@@ -1,7 +1,7 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+// import { getStorage } from 'firebase/storage'; // Disabled for MVP - no storage needed
 
 // Firebase configuration
 const firebaseConfig = {
@@ -19,6 +19,6 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0
 // Initialize Firebase services
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const storage = getStorage(app);
+// export const storage = getStorage(app); // Disabled for MVP - no storage needed
 
 export default app;

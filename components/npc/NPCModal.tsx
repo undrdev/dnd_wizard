@@ -270,15 +270,17 @@ export function NPCModal({ isOpen, onClose, npc, mode }: NPCModalProps) {
                       </select>
                     </div>
 
-                    {/* Portrait Upload */}
+                    {/* Portrait Upload - Temporarily disabled for MVP (no Firebase Storage) */}
                     <div>
-                      <PortraitUpload
-                        currentPortraitUrl={formData.portraitUrl}
-                        onPortraitChange={(url) => handleInputChange('portraitUrl', url || '')}
-                        npcId={npc?.id}
-                        campaignId={currentCampaign?.id || ''}
-                        disabled={isLoading}
-                      />
+                      <div className="text-center p-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+                        <UserIcon className="mx-auto h-12 w-12 text-gray-400" />
+                        <p className="mt-2 text-sm text-gray-600">
+                          Portrait uploads coming soon!
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          NPCs will use default avatars for now
+                        </p>
+                      </div>
                     </div>
                   </div>
 
