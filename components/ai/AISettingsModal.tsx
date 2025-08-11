@@ -10,7 +10,7 @@ interface AISettingsModalProps {
 }
 
 export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
-  const { providers, currentProvider, setOpenAIConfig, setAnthropicConfig, setCurrentProvider } = useAIStore();
+  const { providers, currentProvider, setOpenAIConfig, setAnthropicConfig, setCurrentProvider, saveAPIKeysToFirebase } = useAIStore();
   
   const [openaiApiKey, setOpenaiApiKey] = useState(providers.openai?.apiKey || '');
   const [openaiModel, setOpenaiModel] = useState(providers.openai?.model || 'gpt-4');
@@ -21,7 +21,7 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
   const [showOpenaiKey, setShowOpenaiKey] = useState(false);
   const [showAnthropicKey, setShowAnthropicKey] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Save OpenAI config if provided
     if (openaiApiKey && openaiModel) {
       setOpenAIConfig({ apiKey: openaiApiKey, model: openaiModel });
@@ -44,6 +44,18 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
       config.anthropic = { apiKey: anthropicApiKey, model: anthropicModel };
     }
     aiService.setConfig(config);
+
+    // Save to Firebase
+    try {
+      const success = await saveAPIKeysToFirebase();
+      if (success) {
+        console.log('API keys saved to Firebase successfully');
+      } else {
+        console.warn('Failed to save API keys to Firebase');
+      }
+    } catch (error) {
+      console.error('Error saving API keys to Firebase:', error);
+    }
 
     onClose();
   };
@@ -211,8 +223,8 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
             {/* Privacy Notice */}
             <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
               <p className="text-sm text-blue-800">
-                <strong>Privacy:</strong> API keys are stored locally in your browser and never sent to our servers. 
-                All AI requests are made directly from your browser to the AI provider.
+                <strong>Privacy:</strong> API keys are encrypted and stored securely in Firebase. 
+                They are only accessible to you and are used to make AI requests on your behalf.
               </p>
             </div>
           </div>

@@ -6,7 +6,9 @@ import {
   MagnifyingGlassIcon,
   FunnelIcon,
   UsersIcon,
-  MapPinIcon
+  MapPinIcon,
+  QuestionMarkCircleIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { EnhancedLocation, LocationType, NPC } from '@/types';
 import { useAppStore } from '@/stores/useAppStore';
@@ -25,6 +27,7 @@ export function LocationBrowser({ className = '' }: LocationBrowserProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState<LocationType[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   // Get current location
   const currentLocation = currentLocationId
@@ -133,122 +136,109 @@ export function LocationBrowser({ className = '' }: LocationBrowserProps) {
   ];
 
   return (
-    <div className={`h-full flex flex-col bg-gray-50 ${className}`}>
+    <div className={`h-full flex flex-col bg-white ${className}`}>
+      {/* Help Section */}
+      {showHelp && (
+        <div className="bg-blue-50 border-b border-blue-200 p-4">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h3 className="text-sm font-medium text-blue-900 mb-2">How to Use the Location Browser</h3>
+              <div className="text-sm text-blue-800 space-y-1">
+                <p><strong>Left Panel:</strong> Browse locations in a hierarchical tree structure. Click on any location to view its details.</p>
+                <p><strong>Right Panel:</strong> View detailed information about the selected location, including NPCs and sub-locations.</p>
+                <p><strong>Search:</strong> Use the search bar to quickly find locations by name.</p>
+                <p><strong>Filter:</strong> Filter locations by type (City, Village, Landmark, Dungeon).</p>
+                <p><strong>Navigation:</strong> Use breadcrumbs to navigate back to parent locations.</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowHelp(false)}
+              className="text-blue-600 hover:text-blue-800"
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-            <MapPinIcon className="h-6 w-6 mr-2 text-blue-600" />
-            World Explorer
-          </h1>
+      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center space-x-2">
+          <MapPinIcon className="h-6 w-6 text-gray-600" />
+          <h2 className="text-lg font-semibold text-gray-900">World Explorer</h2>
           <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center space-x-2 px-3 py-2 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+            onClick={() => setShowHelp(!showHelp)}
+            className="text-gray-400 hover:text-gray-600"
+            title="Show help"
           >
-            <FunnelIcon className="h-4 w-4" />
-            <span className="text-sm">Filters</span>
+            <QuestionMarkCircleIcon className="h-5 w-5" />
           </button>
         </div>
-
-        {/* Breadcrumb Navigation */}
-        <BreadcrumbNavigation 
-          currentLocation={currentLocation}
-          locations={locations}
-          onNavigate={navigateToLocation}
-          onNavigateHome={() => setCurrentLocationId(null)}
-        />
-
-        {/* Search Bar */}
-        <div className="relative mt-4">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search locations..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Filters */}
-        {showFilters && (
-          <div className="mt-4 p-4 bg-gray-50 rounded-md">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Location Types</h3>
-            <div className="flex flex-wrap gap-2">
-              {locationTypeOptions.map(type => (
-                <button
-                  key={type}
-                  onClick={() => {
-                    const newFilters = selectedFilters.includes(type)
-                      ? selectedFilters.filter(f => f !== type)
-                      : [...selectedFilters, type];
-                    setSelectedFilters(newFilters);
-                  }}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                    selectedFilters.includes(type)
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-white text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
-                </button>
-              ))}
-            </div>
-            {selectedFilters.length > 0 && (
-              <button
-                onClick={() => setSelectedFilters([])}
-                className="mt-2 text-xs text-blue-600 hover:text-blue-800"
-              >
-                Clear all filters
-              </button>
-            )}
+        
+        <div className="flex items-center space-x-2">
+          {/* Search */}
+          <div className="relative">
+            <MagnifyingGlassIcon className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search locations..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
           </div>
-        )}
+
+          {/* Filter */}
+          <select
+            value={selectedFilters.length === 0 ? 'all' : selectedFilters[0]}
+            onChange={(e) => {
+              const newFilters = e.target.value === 'all' ? [] : [e.target.value as LocationType];
+              setSelectedFilters(newFilters);
+            }}
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="all">All Types</option>
+            {locationTypeOptions.map(type => (
+              <option key={type} value={type}>
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Location List */}
+        {/* Left Panel - Location Tree */}
         <div className="w-1/2 border-r border-gray-200 overflow-y-auto">
           <div className="p-4">
-            {currentLocation && (
-              <button
-                onClick={navigateUp}
-                className="flex items-center space-x-2 mb-4 text-blue-600 hover:text-blue-800 transition-colors"
-              >
-                <HomeIcon className="h-4 w-4" />
-                <span className="text-sm">Back to {currentLocation.parentLocationId ? 'Parent Location' : 'World View'}</span>
-              </button>
-            )}
-
-            <div className="space-y-3">
-              {filteredLocations.map(location => (
-                <HierarchicalLocationCard
-                  key={location.id}
-                  location={location}
-                  npcs={npcs.filter(npc => npc.locationId === location.id)}
-                  isExpanded={expandedLocations.has(location.id)}
-                  onToggleExpanded={() => toggleExpanded(location.id)}
-                  onNavigate={() => navigateToLocation(location.id)}
-                  onSelect={() => setCurrentLocationId(location.id)}
-                  isSelected={currentLocationId === location.id}
-                />
-              ))}
-            </div>
-
-            {filteredLocations.length === 0 && (
+            <h3 className="text-sm font-medium text-gray-900 mb-3">Location Hierarchy</h3>
+            {filteredLocations.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                <MapPinIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <MapPinIcon className="h-12 w-12 mx-auto mb-2 text-gray-300" />
                 <p>No locations found</p>
-                {searchQuery && (
-                  <p className="text-sm mt-2">Try adjusting your search or filters</p>
-                )}
+                {searchQuery && <p className="text-sm">Try adjusting your search</p>}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {filteredLocations.map(location => (
+                  <HierarchicalLocationCard
+                    key={location.id}
+                    location={location}
+                    npcs={npcs.filter(npc => npc.locationId === location.id)}
+                    isExpanded={expandedLocations.has(location.id)}
+                    onToggleExpanded={() => toggleExpanded(location.id)}
+                    onNavigate={() => navigateToLocation(location.id)}
+                    onSelect={() => setCurrentLocationId(location.id)}
+                    isSelected={currentLocationId === location.id}
+                  />
+                ))}
               </div>
             )}
           </div>
         </div>
 
-        {/* Location Details */}
+        {/* Right Panel - Location Details */}
         <div className="w-1/2 overflow-y-auto">
           {currentLocation ? (
             <LocationDetails 

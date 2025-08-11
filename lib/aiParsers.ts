@@ -56,7 +56,7 @@ const COMMAND_PATTERNS = {
   ],
 };
 
-// Entity extraction patterns
+// Entity extraction patterns - more robust and flexible
 const ENTITY_PATTERNS = {
   name: /(?:named|called)\s+["']?([^"'\n,]+?)["']?(?:\s+(?:who|that|in|at|with)|$)/i,
   role: /(?:role|job|profession|class|is\s+a)\s+["']?([^"'\n,]+?)["']?(?:\s+(?:who|that|in|at|with)|$)/i,
@@ -71,23 +71,34 @@ const ENTITY_PATTERNS = {
  * Parse natural language command into structured AI command
  */
 export function parseCommand(text: string, context?: CampaignContext): AICommand {
-  const normalizedText = text.trim().toLowerCase();
-  
-  // Determine command type
-  const commandType = determineCommandType(normalizedText);
-  
-  // Extract parameters based on command type
-  const parameters = extractParameters(text, commandType, context);
-  
-  // Calculate confidence score
-  const confidence = calculateConfidence(normalizedText, commandType, parameters);
-  
-  return {
-    type: commandType,
-    parameters,
-    confidence,
-    originalText: text,
-  };
+  try {
+    const normalizedText = text.trim().toLowerCase();
+    
+    // Determine command type
+    const commandType = determineCommandType(normalizedText);
+    
+    // Extract parameters based on command type
+    const parameters = extractParameters(text, commandType, context);
+    
+    // Calculate confidence score
+    const confidence = calculateConfidence(normalizedText, commandType, parameters);
+    
+    return {
+      type: commandType,
+      parameters,
+      confidence,
+      originalText: text,
+    };
+  } catch (error) {
+    console.warn('Error parsing command:', error);
+    // Return a safe fallback
+    return {
+      type: 'UNKNOWN',
+      parameters: {},
+      confidence: 0.1,
+      originalText: text,
+    };
+  }
 }
 
 /**
@@ -112,30 +123,40 @@ function extractParameters(
   commandType: AICommand['type'], 
   context?: CampaignContext
 ): Record<string, any> {
-  const parameters: Record<string, any> = {};
-  
-  // Extract common entities
-  for (const [key, pattern] of Object.entries(ENTITY_PATTERNS)) {
-    const match = text.match(pattern);
-    if (match) {
-      parameters[key] = match[1].trim();
+  try {
+    const parameters: Record<string, any> = {};
+    
+    // Extract common entities
+    for (const [key, pattern] of Object.entries(ENTITY_PATTERNS)) {
+      try {
+        const match = text.match(pattern);
+        if (match && match[1]) {
+          parameters[key] = match[1].trim();
+        }
+      } catch (patternError) {
+        console.warn(`Error with pattern ${key}:`, patternError);
+        // Continue with other patterns
+      }
     }
-  }
-  
-  // Command-specific parameter extraction
-  switch (commandType) {
-    case 'CREATE_NPC':
-      return extractNPCParameters(text, parameters, context);
-    case 'CREATE_QUEST':
-      return extractQuestParameters(text, parameters, context);
-    case 'CREATE_LOCATION':
-      return extractLocationParameters(text, parameters, context);
-    case 'MODIFY':
-      return extractModifyParameters(text, parameters, context);
-    case 'SUGGEST':
-      return extractSuggestParameters(text, parameters, context);
-    default:
-      return parameters;
+    
+    // Command-specific parameter extraction
+    switch (commandType) {
+      case 'CREATE_NPC':
+        return extractNPCParameters(text, parameters, context);
+      case 'CREATE_QUEST':
+        return extractQuestParameters(text, parameters, context);
+      case 'CREATE_LOCATION':
+        return extractLocationParameters(text, parameters, context);
+      case 'MODIFY':
+        return extractModifyParameters(text, parameters, context);
+      case 'SUGGEST':
+        return extractSuggestParameters(text, parameters, context);
+      default:
+        return parameters;
+    }
+  } catch (error) {
+    console.warn('Error extracting parameters:', error);
+    return {};
   }
 }
 

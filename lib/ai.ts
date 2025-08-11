@@ -330,7 +330,7 @@ EXISTING CONTENT:`;
         throw new Error(`API error: ${data.error || 'Unknown error'}`);
       }
 
-      return parseAIResponse(data.content);
+      return this.parseAIResponse(data.content);
     } catch (error) {
       console.error('OpenAI generation error:', error);
       throw error;
@@ -373,7 +373,7 @@ EXISTING CONTENT:`;
       }
 
       const data = await response.json();
-      return parseAIResponse(data.content[0].text);
+      return this.parseAIResponse(data.content[0].text);
     } catch (error) {
       console.error('Anthropic generation error:', error);
       throw error;

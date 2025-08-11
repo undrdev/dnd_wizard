@@ -15,7 +15,7 @@ export function AIChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { getCurrentCampaignData } = useAppStore();
-  const { hasValidProvider, conversationHistory, currentProvider } = useAIStore();
+  const { hasValidProvider, conversationHistory, currentProvider, loadAPIKeysFromFirebase, isLoadingKeys } = useAIStore();
   const {
     isGenerating,
     previewContent,
@@ -32,6 +32,11 @@ export function AIChat() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversationHistory]);
+
+  useEffect(() => {
+    // Load API keys from Firebase on mount
+    loadAPIKeysFromFirebase();
+  }, [loadAPIKeysFromFirebase]);
 
   useEffect(() => {
     if (error) {
@@ -105,6 +110,22 @@ export function AIChat() {
   const handleQuickAction = (prompt: string) => {
     setMessage(prompt);
   };
+
+  if (isLoadingKeys) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center p-6 text-center">
+        <div className="mb-4">
+          <CogIcon className="h-12 w-12 text-gray-400 mx-auto mb-2 animate-spin" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Loading AI Configuration
+          </h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Loading your saved AI settings...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!hasValidProvider()) {
     return (
