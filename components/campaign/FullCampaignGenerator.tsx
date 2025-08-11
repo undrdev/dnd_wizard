@@ -126,7 +126,46 @@ export function FullCampaignGenerator({ isOpen, onClose }: FullCampaignGenerator
 
         for (const location of generatedCampaign.locations) {
           location.campaignId = campaign.id;
-          const locationId = await LocationService.createLocation(location);
+
+          // Convert enhanced location to basic location for storage
+          const getBasicLocationType = (enhancedType: string): 'city' | 'village' | 'landmark' | 'dungeon' => {
+            switch (enhancedType) {
+              case 'continent':
+              case 'region':
+              case 'temple':
+              case 'ruins':
+              case 'monument':
+              case 'bridge':
+              case 'crossroads':
+                return 'landmark';
+              case 'country':
+              case 'kingdom':
+              case 'province':
+              case 'state':
+              case 'city':
+                return 'city';
+              case 'town':
+              case 'village':
+                return 'village';
+              case 'dungeon':
+                return 'dungeon';
+              default:
+                return 'city';
+            }
+          };
+
+          const basicLocation = {
+            id: '', // Will be set by service
+            campaignId: location.campaignId,
+            name: location.name,
+            type: getBasicLocationType(location.type),
+            coords: { lat: 0, lng: 0 }, // Default coordinates
+            description: location.description,
+            npcs: location.npcs,
+            quests: location.quests
+          };
+
+          const locationId = await LocationService.createLocation(basicLocation);
           addLocation({ ...location, id: locationId });
         }
         

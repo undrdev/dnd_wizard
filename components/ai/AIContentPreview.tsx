@@ -183,15 +183,39 @@ function QuestPreviewCard({ quest }: QuestPreviewCardProps) {
 }
 
 interface LocationPreviewCardProps {
-  location: Partial<import('@/types').Location>;
+  location: Partial<import('@/types').EnhancedLocation>;
 }
 
 function LocationPreviewCard({ location }: LocationPreviewCardProps) {
-  const typeColors = {
-    city: 'bg-blue-100 text-blue-800',
-    village: 'bg-green-100 text-green-800',
-    landmark: 'bg-yellow-100 text-yellow-800',
+  const typeColors: Record<string, string> = {
+    continent: 'bg-purple-100 text-purple-800',
+    region: 'bg-purple-100 text-purple-800',
+    country: 'bg-blue-100 text-blue-800',
+    kingdom: 'bg-blue-100 text-blue-800',
+    province: 'bg-indigo-100 text-indigo-800',
+    state: 'bg-indigo-100 text-indigo-800',
+    city: 'bg-green-100 text-green-800',
+    town: 'bg-yellow-100 text-yellow-800',
+    village: 'bg-orange-100 text-orange-800',
+    district: 'bg-gray-100 text-gray-800',
+    neighborhood: 'bg-gray-100 text-gray-800',
+    building: 'bg-red-100 text-red-800',
+    establishment: 'bg-red-100 text-red-800',
+    temple: 'bg-amber-100 text-amber-800',
+    ruins: 'bg-amber-100 text-amber-800',
+    monument: 'bg-amber-100 text-amber-800',
+    bridge: 'bg-amber-100 text-amber-800',
+    crossroads: 'bg-amber-100 text-amber-800',
+    river: 'bg-cyan-100 text-cyan-800',
+    lake: 'bg-cyan-100 text-cyan-800',
+    ocean: 'bg-cyan-100 text-cyan-800',
+    mountain: 'bg-emerald-100 text-emerald-800',
+    forest: 'bg-emerald-100 text-emerald-800',
+    desert: 'bg-emerald-100 text-emerald-800',
     dungeon: 'bg-red-100 text-red-800',
+    wilderness: 'bg-emerald-100 text-emerald-800',
+    structure: 'bg-red-100 text-red-800',
+    landmark: 'bg-yellow-100 text-yellow-800',
   };
   
   return (

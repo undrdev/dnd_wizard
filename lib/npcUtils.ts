@@ -1,4 +1,4 @@
-import type { NPC, EnhancedNPC, NPCRelationship } from '@/types';
+import type { NPC, EnhancedNPC, NPCRelationship, RelationshipType } from '@/types';
 
 // Default values for enhanced NPC fields
 export const createEnhancedNPCDefaults = (): Partial<EnhancedNPC> => ({
@@ -49,18 +49,18 @@ export const validateRelationship = (
 ): string[] => {
   const errors: string[] = [];
 
-  if (!relationship.targetNpcId) {
+  if (!relationship.toNpcId) {
     errors.push('Target NPC is required');
-  } else if (!allNPCs.find(npc => npc.id === relationship.targetNpcId)) {
+  } else if (!allNPCs.find(npc => npc.id === relationship.toNpcId)) {
     errors.push('Target NPC does not exist');
   }
 
-  if (!relationship.type) {
+  if (!relationship.relationshipType) {
     errors.push('Relationship type is required');
   }
 
-  if (relationship.strength === undefined || relationship.strength < 1 || relationship.strength > 10) {
-    errors.push('Relationship strength must be between 1 and 10');
+  if (!relationship.strength || !['weak', 'moderate', 'strong', 'intense'].includes(relationship.strength)) {
+    errors.push('Relationship strength must be one of: weak, moderate, strong, intense');
   }
 
   if (!relationship.description?.trim()) {
@@ -71,25 +71,46 @@ export const validateRelationship = (
 };
 
 // Get relationship type display name
-export const getRelationshipTypeDisplay = (type: NPCRelationship['type']): string => {
-  const typeMap: Record<NPCRelationship['type'], string> = {
-    ally: 'Ally',
-    enemy: 'Enemy',
-    neutral: 'Neutral',
-    romantic: 'Romantic',
+export const getRelationshipTypeDisplay = (type: RelationshipType): string => {
+  const typeMap: Record<RelationshipType, string> = {
     family: 'Family',
-    business: 'Business',
+    spouse: 'Spouse',
+    parent: 'Parent',
+    child: 'Child',
+    sibling: 'Sibling',
+    friend: 'Friend',
+    close_friend: 'Close Friend',
+    acquaintance: 'Acquaintance',
+    enemy: 'Enemy',
+    rival: 'Rival',
+    nemesis: 'Nemesis',
+    business_partner: 'Business Partner',
+    employer: 'Employer',
+    employee: 'Employee',
+    political_ally: 'Political Ally',
+    political_enemy: 'Political Enemy',
+    mentor: 'Mentor',
+    student: 'Student',
+    colleague: 'Colleague',
+    romantic_interest: 'Romantic Interest',
+    ex_lover: 'Ex-Lover',
+    guild_member: 'Guild Member',
+    religious_ally: 'Religious Ally',
+    unknown: 'Unknown',
+    neutral: 'Neutral',
   };
   return typeMap[type] || type;
 };
 
 // Get relationship strength display
-export const getRelationshipStrengthDisplay = (strength: number): string => {
-  if (strength >= 9) return 'Very Strong';
-  if (strength >= 7) return 'Strong';
-  if (strength >= 5) return 'Moderate';
-  if (strength >= 3) return 'Weak';
-  return 'Very Weak';
+export const getRelationshipStrengthDisplay = (strength: 'weak' | 'moderate' | 'strong' | 'intense'): string => {
+  const strengthMap = {
+    weak: 'Weak',
+    moderate: 'Moderate',
+    strong: 'Strong',
+    intense: 'Intense',
+  };
+  return strengthMap[strength] || strength;
 };
 
 // Filter NPCs by search term
@@ -109,7 +130,7 @@ export const filterNPCsBySearch = (npcs: EnhancedNPC[], searchTerm: string): Enh
 // Filter NPCs by criteria
 export interface NPCFilterCriteria {
   locationId?: string;
-  relationshipType?: NPCRelationship['type'];
+  relationshipType?: RelationshipType;
   hasPortrait?: boolean;
   hasRelationships?: boolean;
 }
@@ -137,13 +158,11 @@ export const filterNPCsByCriteria = (
       }
     }
 
+    // TODO: Implement relationship type filtering when relationship store is available
+    // Currently relationships are stored as IDs only
     if (criteria.relationshipType) {
-      const hasRelationshipType = npc.relationships.some(
-        rel => rel.type === criteria.relationshipType
-      );
-      if (!hasRelationshipType) {
-        return false;
-      }
+      // Skip filtering by relationship type for now
+      console.log('Relationship type filtering not yet implemented with new relationship system');
     }
 
     return true;
@@ -214,26 +233,31 @@ export const generateNPCStats = (role: string): Record<string, any> => {
 
 // Create a new relationship
 export const createRelationship = (
-  targetNpcId: string,
-  type: NPCRelationship['type'],
-  strength: number,
-  description: string
-): NPCRelationship => ({
+  toNpcId: string,
+  relationshipType: import('@/types').RelationshipType,
+  strength: 'weak' | 'moderate' | 'strong' | 'intense',
+  description: string,
+  fromNpcId?: string
+): import('@/types').NPCRelationship => ({
   id: `rel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-  targetNpcId,
-  type,
+  fromNpcId: fromNpcId || '',
+  toNpcId,
+  relationshipType,
   strength,
   description,
+  isPublic: true,
   createdAt: new Date(),
+  updatedAt: new Date(),
 });
 
 // Get mutual relationships between two NPCs
+// TODO: Implement with relationship store when available
 export const getMutualRelationships = (
   npc1: EnhancedNPC,
   npc2: EnhancedNPC
 ): { npc1ToNpc2?: NPCRelationship; npc2ToNpc1?: NPCRelationship } => {
-  const npc1ToNpc2 = npc1.relationships.find(rel => rel.targetNpcId === npc2.id);
-  const npc2ToNpc1 = npc2.relationships.find(rel => rel.targetNpcId === npc1.id);
-
-  return { npc1ToNpc2, npc2ToNpc1 };
+  // Currently relationships are stored as IDs only
+  // This function will need to be implemented when we have a relationship store
+  console.log('getMutualRelationships not yet implemented with new relationship system');
+  return { npc1ToNpc2: undefined, npc2ToNpc1: undefined };
 };

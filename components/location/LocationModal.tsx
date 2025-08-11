@@ -3,7 +3,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { XMarkIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import { useLocations } from '@/hooks/useLocations';
-import type { EnhancedLocation, LocationFormData } from '@/types';
+import type { EnhancedLocation, EnhancedLocationFormData } from '@/types';
 
 interface LocationModalProps {
   isOpen: boolean;
@@ -29,7 +29,7 @@ export function LocationModal({
     getLocationBreadcrumbPath 
   } = useLocations();
 
-  const [formData, setFormData] = useState<LocationFormData>({
+  const [formData, setFormData] = useState<EnhancedLocationFormData>({
     name: '',
     type: 'landmark',
     coords: { lat: 0, lng: 0 },
@@ -63,10 +63,10 @@ export function LocationModal({
         history: location.history,
         rumors: [...location.rumors],
         secrets: [...location.secrets],
-        climate: location.climate,
+        climate: typeof location.climate === 'string' ? location.climate : location.climate?.temperatureRange || '',
         population: location.population,
-        government: location.government || '',
-        economy: location.economy || '',
+        government: typeof location.politics?.governmentType === 'string' ? location.politics.governmentType : '',
+        economy: typeof location.economy?.economicStatus === 'string' ? location.economy.economicStatus : '',
         parentLocationId: location.parentLocationId,
       });
     } else {
@@ -93,12 +93,80 @@ export function LocationModal({
     
     try {
       let success = false;
-      
+
+      // Convert form data to enhanced location format
+      const enhancedData = {
+        name: formData.name,
+        type: formData.type,
+        description: formData.description,
+        detailedDescription: formData.detailedDescription,
+        history: formData.history,
+        rumors: formData.rumors,
+        secrets: formData.secrets,
+        population: formData.population,
+        parentLocationId: formData.parentLocationId,
+        // Convert simple strings to complex objects
+        climate: {
+          temperatureRange: formData.climate,
+          seasons: ['Spring', 'Summer', 'Autumn', 'Winter'],
+          precipitation: 'Regular',
+          weatherEvents: []
+        },
+        politics: {
+          governmentType: formData.government || '',
+          rulers: [],
+          laws: [],
+          conflicts: [],
+          alliances: [],
+          politicalStatus: 'Stable'
+        },
+        economy: {
+          economicStatus: formData.economy || '',
+          tradeGoods: [],
+          currency: 'Gold pieces',
+          markets: [],
+          guilds: [],
+          industries: []
+        },
+        geography: {
+          terrain: 'Mixed',
+          topography: 'Varied',
+          naturalFeatures: [],
+          climateZone: formData.climate,
+          flora: [],
+          fauna: [],
+          naturalResources: [],
+          weatherPatterns: 'Seasonal',
+          naturalDisasters: []
+        },
+        architecture: {
+          buildingStyles: [],
+          materials: [],
+          cityLayout: 'Organic',
+          fortifications: 'Basic',
+          notableBuildings: []
+        },
+        culture: {
+          demographics: [],
+          languages: ['Common'],
+          customs: [],
+          festivals: [],
+          religions: [],
+          socialStructure: 'Traditional'
+        },
+        legends: [],
+        notableFeatures: [],
+        magicalProperties: [],
+        size: 'medium' as const,
+        hierarchyLevel: 3
+      };
+
       if (isEditing && location) {
-        success = await updateLocation(location.id, formData);
+        success = await updateLocation(location.id, enhancedData);
       } else {
         const createData = {
-          ...formData,
+          ...enhancedData,
+          coords: formData.coords,
           campaignId: '', // This will be set in the hook
           npcs: [],
           quests: [],
@@ -116,7 +184,7 @@ export function LocationModal({
     }
   };
 
-  const handleInputChange = (field: keyof LocationFormData, value: any) => {
+  const handleInputChange = (field: keyof EnhancedLocationFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 

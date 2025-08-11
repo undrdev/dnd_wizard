@@ -4,7 +4,7 @@ import { DEFAULT_MAP_THEMES } from '@/lib/mapThemes';
 import type {
   AppState,
   Campaign,
-  Location,
+  EnhancedLocation,
   NPC,
   Quest,
   User,
@@ -28,9 +28,9 @@ interface AppStore extends RealtimeAppState {
   updateCampaign: (campaignId: string, updates: Partial<Campaign>) => void;
   deleteCampaign: (campaignId: string) => void;
 
-  setLocations: (locations: Location[]) => void;
-  addLocation: (location: Location) => void;
-  updateLocation: (locationId: string, updates: Partial<Location>) => void;
+  setLocations: (locations: EnhancedLocation[]) => void;
+  addLocation: (location: EnhancedLocation) => void;
+  updateLocation: (locationId: string, updates: Partial<EnhancedLocation>) => void;
   deleteLocation: (locationId: string) => void;
 
   setNPCs: (npcs: NPC[]) => void;
@@ -63,20 +63,20 @@ interface AppStore extends RealtimeAppState {
   // Computed getters
   getCurrentCampaignData: () => {
     campaign: Campaign | null;
-    locations: Location[];
+    locations: EnhancedLocation[];
     npcs: NPC[];
     quests: Quest[];
   };
 
   getSelectedNPC: () => NPC | undefined;
   getSelectedQuest: () => Quest | undefined;
-  getSelectedLocation: () => Location | undefined;
+  getSelectedLocation: () => EnhancedLocation | undefined;
 
   // Utility actions
   reset: () => void;
   loadCampaignData: (data: {
     campaign: Campaign;
-    locations: Location[];
+    locations: EnhancedLocation[];
     npcs: NPC[];
     quests: Quest[];
   }) => void;
@@ -304,11 +304,15 @@ export const useAppStore = create<AppStore>()(
             const { CampaignService, LocationService, NPCService, QuestService } = await import('@/lib/firestore');
 
             // Fetch fresh data from Firestore
-            const [locations, npcs, quests] = await Promise.all([
+            const [basicLocations, npcs, quests] = await Promise.all([
               LocationService.getCampaignLocations(state.currentCampaign.id),
               NPCService.getCampaignNPCs(state.currentCampaign.id),
               QuestService.getCampaignQuests(state.currentCampaign.id),
             ]);
+
+            // Convert basic locations to enhanced locations
+            const { enhanceLocation } = await import('@/lib/locationUtils');
+            const locations = basicLocations.map(enhanceLocation);
 
             // Update store with fresh data
             set({

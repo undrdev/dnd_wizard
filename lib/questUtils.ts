@@ -150,7 +150,7 @@ export function filterQuests(
   quests: EnhancedQuest[],
   options: QuestSearchOptions,
   npcs: NPC[] = [],
-  locations: Location[] = []
+  locations: import('@/types').EnhancedLocation[] = []
 ): EnhancedQuest[] {
   let filteredQuests = [...quests];
 

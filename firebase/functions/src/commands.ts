@@ -1,7 +1,13 @@
 import { Request, Response } from 'express';
-import * as admin from 'firebase-admin';
+import { initializeApp, getApps } from 'firebase-admin/app';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
-const db = admin.firestore();
+// Initialize Firebase Admin
+if (getApps().length === 0) {
+  initializeApp();
+}
+
+const db = getFirestore();
 
 export async function processCommand(req: Request, res: Response) {
   try {
@@ -77,8 +83,8 @@ async function createNPC(campaignId: string, data: any) {
     locationId: data.locationId || '',
     stats: data.stats || {},
     quests: [],
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
   };
 
   const docRef = await db.collection('npcs').add(npcData);
@@ -95,8 +101,8 @@ async function createQuest(campaignId: string, data: any) {
     startNpcId: data.startNpcId || '',
     involvedNpcIds: data.involvedNpcIds || [],
     locationIds: data.locationIds || [],
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
   };
 
   const docRef = await db.collection('quests').add(questData);
@@ -112,8 +118,8 @@ async function createLocation(campaignId: string, data: any) {
     description: data.description,
     npcs: [],
     quests: [],
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
   };
 
   const docRef = await db.collection('locations').add(locationData);

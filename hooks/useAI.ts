@@ -3,7 +3,7 @@ import { useAppStore } from '@/stores/useAppStore';
 import { useAIStore } from '@/stores/useAIStore';
 import { aiService } from '@/lib/ai';
 import { parseCommand, parseAIResponse, type AICommand, type ParsedContent } from '@/lib/aiParsers';
-import type { AIMessage, NPC, Quest, Location } from '@/types';
+import type { AIMessage, NPC, Quest, EnhancedLocation } from '@/types';
 
 interface UseAIReturn {
   // State
@@ -144,14 +144,74 @@ export function useAI(): UseAIReturn {
       // Add Locations
       if (previewContent.locations?.length) {
         for (const locationData of previewContent.locations) {
-          const location: Partial<Location> = {
+          const location: Partial<EnhancedLocation> = {
             ...locationData,
             campaignId: campaign.id,
             coords: locationData.coords || { lat: 0, lng: 0 },
             npcs: [],
             quests: [],
+            subLocations: [],
+            images: [],
+            hierarchyLevel: 3,
+            size: 'medium',
+            // Add default enhanced data
+            geography: {
+              terrain: 'Mixed',
+              topography: 'Varied',
+              naturalFeatures: [],
+              climateZone: 'Temperate',
+              flora: [],
+              fauna: [],
+              naturalResources: [],
+              weatherPatterns: 'Seasonal',
+              naturalDisasters: []
+            },
+            architecture: {
+              buildingStyles: [],
+              materials: [],
+              cityLayout: 'Organic',
+              fortifications: 'Basic',
+              notableBuildings: []
+            },
+            politics: {
+              governmentType: 'Local council',
+              rulers: [],
+              laws: [],
+              conflicts: [],
+              alliances: [],
+              politicalStatus: 'Stable'
+            },
+            economy: {
+              tradeGoods: [],
+              currency: 'Gold pieces',
+              markets: [],
+              guilds: [],
+              industries: [],
+              economicStatus: 'Moderate'
+            },
+            culture: {
+              demographics: [],
+              languages: ['Common'],
+              customs: [],
+              festivals: [],
+              religions: [],
+              socialStructure: 'Traditional'
+            },
+            climate: {
+              temperatureRange: 'Moderate',
+              seasons: ['Spring', 'Summer', 'Autumn', 'Winter'],
+              precipitation: 'Regular',
+              weatherEvents: []
+            },
+            legends: [],
+            rumors: [],
+            secrets: [],
+            notableFeatures: [],
+            magicalProperties: [],
+            history: '',
+            detailedDescription: locationData.description || ''
           };
-          await addLocation(location as Location);
+          await addLocation(location as EnhancedLocation);
         }
       }
       

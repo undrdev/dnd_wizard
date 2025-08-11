@@ -375,6 +375,7 @@ Format as JSON with acts array and overall plot information.`;
         armorClass: 10,
       },
       quests: [],
+      relationships: [],
     };
   }
 
@@ -399,22 +400,84 @@ Format as JSON with acts array and overall plot information.`;
       id: generateId(),
       campaignId: '',
       name: data.name || 'Unknown Location',
-      type: data.type || 'settlement',
-      coords: { lat: 0, lng: 0 },
+      type: data.type || 'city',
+      coords: data.coords || { lat: 0, lng: 0 },
       description: data.description || '',
-      npcs: [],
-      quests: [],
+      detailedDescription: data.description || '',
+
+      // Hierarchical structure
       parentLocationId: undefined,
       subLocations: [],
-      images: [],
-      detailedDescription: data.description || '',
+      hierarchyLevel: 3,
+
+      // Enhanced data
+      geography: {
+        terrain: 'Mixed',
+        topography: 'Varied',
+        naturalFeatures: [],
+        climateZone: data.climate || 'Temperate',
+        flora: [],
+        fauna: [],
+        naturalResources: [],
+        weatherPatterns: 'Seasonal',
+        naturalDisasters: []
+      },
+      architecture: {
+        buildingStyles: [],
+        materials: [],
+        cityLayout: 'Organic',
+        fortifications: 'Basic',
+        notableBuildings: []
+      },
+      politics: {
+        governmentType: data.government || 'Local council',
+        rulers: [],
+        laws: [],
+        conflicts: [],
+        alliances: [],
+        politicalStatus: 'Stable'
+      },
+      economy: {
+        tradeGoods: [],
+        currency: 'Gold pieces',
+        markets: [],
+        guilds: [],
+        industries: [],
+        economicStatus: data.economy || 'Moderate'
+      },
+      culture: {
+        demographics: [],
+        languages: ['Common'],
+        customs: [],
+        festivals: [],
+        religions: [],
+        socialStructure: 'Traditional'
+      },
+      climate: {
+        temperatureRange: data.climate || 'Moderate',
+        seasons: ['Spring', 'Summer', 'Autumn', 'Winter'],
+        precipitation: 'Regular',
+        weatherEvents: []
+      },
+
+      // Story elements
       history: data.history || '',
+      legends: [],
       rumors: Array.isArray(data.rumors) ? data.rumors : [],
       secrets: Array.isArray(data.secrets) ? data.secrets : [],
-      climate: data.climate || 'temperate',
+      notableFeatures: [],
+      magicalProperties: [],
+
+      // Population and size
       population: data.population || 0,
-      government: data.government || 'Unknown',
-      economy: data.economy || 'Unknown',
+      size: 'medium',
+
+      // Associated entities
+      npcs: [],
+      quests: [],
+      images: [],
+
+      // Metadata
       createdAt: new Date(),
       updatedAt: new Date(),
     };

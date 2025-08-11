@@ -28,37 +28,87 @@ interface LocationCardProps {
 
 export function LocationCard({ 
   location, 
-  onEdit, 
-  onDelete, 
+  onEdit,
+  onDelete,
   onViewImages,
   showHierarchy = false,
-  depth = 0 
+  depth = 0
 }: LocationCardProps) {
   const { npcs, quests, selectLocation } = useAppStore();
   const { getSubLocations } = useLocations();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const locationNPCs = npcs.filter(npc => npc.locationId === location.id);
-  const locationQuests = quests.filter(quest => quest.locationIds.includes(location.id));
-  const subLocations = getSubLocations(location.id);
-  const primaryImage = location.images.find(img => img.isPrimary);
+  const locationQuests = quests.filter(quest => quest.locationIds?.includes(location.id) || false);
+  const subLocations = getSubLocations ? getSubLocations(location.id) : [];
+  const primaryImage = location.images?.find(img => img.isPrimary);
 
-  const typeIcons = {
+  const typeIcons: Record<string, string> = {
+    continent: '🌍',
+    region: '🗺️',
+    country: '🏛️',
+    kingdom: '👑',
+    province: '🏞️',
+    state: '🏛️',
     city: '🏰',
-    village: '🏘️',
-    landmark: '🗿',
+    town: '🏘️',
+    village: '🏡',
+    district: '🏢',
+    neighborhood: '🏠',
+    building: '🏗️',
+    establishment: '🏪',
+    river: '🌊',
+    lake: '🏞️',
+    ocean: '🌊',
+    mountain: '⛰️',
+    forest: '🌲',
+    desert: '🏜️',
+    temple: '⛪',
+    ruins: '🏛️',
+    monument: '🗿',
+    bridge: '🌉',
+    crossroads: '🛤️',
     dungeon: '🕳️',
+    wilderness: '🌿',
+    structure: '🏗️',
+    landmark: '🗿',
   };
 
-  const typeColors = {
-    city: 'bg-purple-100 text-purple-800',
-    village: 'bg-green-100 text-green-800',
-    landmark: 'bg-blue-100 text-blue-800',
+  const typeColors: Record<string, string> = {
+    continent: 'bg-purple-100 text-purple-800',
+    region: 'bg-purple-100 text-purple-800',
+    country: 'bg-blue-100 text-blue-800',
+    kingdom: 'bg-blue-100 text-blue-800',
+    province: 'bg-indigo-100 text-indigo-800',
+    state: 'bg-indigo-100 text-indigo-800',
+    city: 'bg-green-100 text-green-800',
+    town: 'bg-yellow-100 text-yellow-800',
+    village: 'bg-orange-100 text-orange-800',
+    district: 'bg-gray-100 text-gray-800',
+    neighborhood: 'bg-gray-100 text-gray-800',
+    building: 'bg-red-100 text-red-800',
+    establishment: 'bg-red-100 text-red-800',
+    river: 'bg-cyan-100 text-cyan-800',
+    lake: 'bg-cyan-100 text-cyan-800',
+    ocean: 'bg-cyan-100 text-cyan-800',
+    mountain: 'bg-emerald-100 text-emerald-800',
+    forest: 'bg-emerald-100 text-emerald-800',
+    desert: 'bg-emerald-100 text-emerald-800',
+    temple: 'bg-amber-100 text-amber-800',
+    ruins: 'bg-amber-100 text-amber-800',
+    monument: 'bg-amber-100 text-amber-800',
+    bridge: 'bg-amber-100 text-amber-800',
+    crossroads: 'bg-amber-100 text-amber-800',
     dungeon: 'bg-red-100 text-red-800',
+    wilderness: 'bg-emerald-100 text-emerald-800',
+    structure: 'bg-red-100 text-red-800',
+    landmark: 'bg-blue-100 text-blue-800',
   };
 
   const handleCardClick = () => {
-    selectLocation(location.id);
+    if (selectLocation) {
+      selectLocation(location.id);
+    }
   };
 
   const handleExpandClick = (e: React.MouseEvent) => {
@@ -77,7 +127,7 @@ export function LocationCard({
             {/* Location Icon */}
             <div className="flex-shrink-0">
               <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-2xl">
-                {typeIcons[location.type]}
+                {typeIcons[location.type] || '🗿'}
               </div>
             </div>
 
@@ -87,7 +137,7 @@ export function LocationCard({
                 <h3 className="text-lg font-semibold text-gray-900 truncate">
                   {location.name}
                 </h3>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${typeColors[location.type]}`}>
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ${typeColors[location.type] || 'bg-gray-100 text-gray-800'}`}>
                   {location.type}
                 </span>
               </div>
@@ -100,11 +150,7 @@ export function LocationCard({
 
               {/* Quick Stats */}
               <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                <div className="flex items-center space-x-1">
-                  <MapPinIcon className="h-3 w-3" />
-                  <span>{location.coords.lat.toFixed(2)}, {location.coords.lng.toFixed(2)}</span>
-                </div>
-                {location.population && (
+                {location.population && location.population > 0 && (
                   <div className="flex items-center space-x-1">
                     <UsersIcon className="h-3 w-3" />
                     <span>{location.population.toLocaleString()}</span>
@@ -141,7 +187,7 @@ export function LocationCard({
               </button>
             )}
             
-            {location.images.length > 0 && onViewImages && (
+            {location.images && location.images.length > 0 && onViewImages && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -200,77 +246,13 @@ export function LocationCard({
             </div>
           )}
 
-          {/* Detailed Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Left Column */}
-            <div className="space-y-3">
-              {location.detailedDescription && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-1">Description</h4>
-                  <p className="text-sm text-gray-600">{location.detailedDescription}</p>
-                </div>
-              )}
-
-              {location.climate && (
-                <div className="flex items-center space-x-2">
-                  <CloudIcon className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm text-gray-600">Climate: {location.climate}</span>
-                </div>
-              )}
-
-              {location.government && (
-                <div className="flex items-center space-x-2">
-                  <BuildingOfficeIcon className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm text-gray-600">Government: {location.government}</span>
-                </div>
-              )}
-
-              {location.economy && (
-                <div className="flex items-center space-x-2">
-                  <CurrencyDollarIcon className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm text-gray-600">Economy: {location.economy}</span>
-                </div>
-              )}
+          {/* Detailed Description */}
+          {location.detailedDescription && (
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-1">Description</h4>
+              <p className="text-sm text-gray-600">{location.detailedDescription}</p>
             </div>
-
-            {/* Right Column */}
-            <div className="space-y-3">
-              {location.history && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-1">History</h4>
-                  <p className="text-sm text-gray-600">{location.history}</p>
-                </div>
-              )}
-
-              {location.rumors.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-1">Rumors</h4>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    {location.rumors.map((rumor, index) => (
-                      <li key={index} className="flex items-start space-x-2">
-                        <span className="w-1 h-1 bg-gray-400 rounded-full mt-2 flex-shrink-0"></span>
-                        <span>{rumor}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {location.secrets.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-1">Secrets</h4>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    {location.secrets.map((secret, index) => (
-                      <li key={index} className="flex items-start space-x-2">
-                        <EyeIcon className="h-3 w-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                        <span>{secret}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
+          )}
 
           {/* NPCs and Quests */}
           {(locationNPCs.length > 0 || locationQuests.length > 0) && (
@@ -317,27 +299,6 @@ export function LocationCard({
             </div>
           )}
 
-          {/* Sub-locations */}
-          {subLocations.length > 0 && (
-            <div className="pt-4 border-t border-gray-100">
-              <h4 className="text-sm font-medium text-gray-900 mb-2">
-                Sub-locations ({subLocations.length})
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {subLocations.map(subLocation => (
-                  <div
-                    key={subLocation.id}
-                    className="flex items-center space-x-2 p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100"
-                    onClick={() => selectLocation(subLocation.id)}
-                  >
-                    <span className="text-lg">{typeIcons[subLocation.type]}</span>
-                    <span className="text-sm text-gray-900">{subLocation.name}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Timestamps */}
           {(location.createdAt || location.updatedAt) && (
             <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
@@ -355,23 +316,6 @@ export function LocationCard({
               )}
             </div>
           )}
-        </div>
-      )}
-
-      {/* Sub-locations in hierarchy mode */}
-      {showHierarchy && isExpanded && subLocations.length > 0 && (
-        <div className="border-t border-gray-100">
-          {subLocations.map(subLocation => (
-            <LocationCard
-              key={subLocation.id}
-              location={subLocation}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onViewImages={onViewImages}
-              showHierarchy={true}
-              depth={depth + 1}
-            />
-          ))}
         </div>
       )}
     </div>

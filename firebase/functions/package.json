@@ -15,6 +15,7 @@
   "engines": {
     "node": "20"
   },
+  "type": "module",
   "dependencies": {
     "cors": "^2.8.5",
     "firebase-admin": "^13.4.0",

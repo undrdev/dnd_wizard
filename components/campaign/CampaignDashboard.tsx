@@ -1,25 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import { useAppStore } from '@/stores/useAppStore';
 import { CampaignService, LocationService, NPCService, QuestService } from '@/lib/firestore';
 import { CampaignSidebar } from './CampaignSidebar';
 import { ImportExportModal } from './ImportExportModal';
-
-// Dynamically import the map component to avoid SSR issues with Leaflet
-const CampaignMap = dynamic(
-  () => import('@/components/map/CampaignMap').then(mod => ({ default: mod.CampaignMap })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-full w-full flex items-center justify-center bg-gray-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-          <p className="text-gray-600">Loading map...</p>
-        </div>
-      </div>
-    )
-  }
-);
+import { LocationBrowser } from '@/components/location/LocationBrowser';
+import { migrateLocations } from '@/lib/locationMigration';
 
 export function CampaignDashboard() {
   const {
@@ -44,11 +29,14 @@ export function CampaignDashboard() {
 
     setLoading(true);
     try {
-      const [locations, npcs, quests] = await Promise.all([
+      const [rawLocations, npcs, quests] = await Promise.all([
         LocationService.getCampaignLocations(currentCampaign.id),
         NPCService.getCampaignNPCs(currentCampaign.id),
         QuestService.getCampaignQuests(currentCampaign.id),
       ]);
+
+      // Migrate locations to enhanced format
+      const locations = migrateLocations(rawLocations);
 
       loadCampaignData({
         campaign: currentCampaign,
@@ -133,9 +121,9 @@ export function CampaignDashboard() {
           </div>
         </div>
 
-        {/* Map area */}
+        {/* Location Browser area */}
         <div className="flex-1">
-          <CampaignMap className="h-full w-full" />
+          <LocationBrowser className="h-full w-full" />
         </div>
       </div>
     </div>

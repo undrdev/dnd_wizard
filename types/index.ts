@@ -24,19 +24,114 @@ export interface Location {
   quests: string[]; // Quest IDs
 }
 
-// Enhanced Location interface for AGENT 4
-export interface EnhancedLocation extends Location {
+// Enhanced Location Types for Hierarchical System
+export type LocationType =
+  | 'continent' | 'region'
+  | 'country' | 'kingdom'
+  | 'province' | 'state'
+  | 'city' | 'town' | 'village'
+  | 'district' | 'neighborhood'
+  | 'building' | 'establishment'
+  | 'river' | 'lake' | 'ocean' | 'mountain' | 'forest' | 'desert'
+  | 'temple' | 'ruins' | 'monument' | 'bridge' | 'crossroads'
+  | 'dungeon' | 'wilderness' | 'structure' | 'landmark';
+
+export interface LocationGeography {
+  terrain: string;
+  topography: string;
+  naturalFeatures: string[];
+  climateZone: string;
+  flora: string[];
+  fauna: string[];
+  naturalResources: string[];
+  weatherPatterns: string;
+  naturalDisasters: string[];
+}
+
+export interface LocationArchitecture {
+  buildingStyles: string[];
+  materials: string[];
+  cityLayout: string;
+  fortifications: string;
+  notableBuildings: string[];
+}
+
+export interface LocationPolitics {
+  governmentType: string;
+  rulers: string[];
+  laws: string[];
+  conflicts: string[];
+  alliances: string[];
+  politicalStatus: string;
+}
+
+export interface LocationEconomy {
+  tradeGoods: string[];
+  currency: string;
+  markets: string[];
+  guilds: string[];
+  industries: string[];
+  economicStatus: string;
+}
+
+export interface LocationCulture {
+  demographics: string[];
+  languages: string[];
+  customs: string[];
+  festivals: string[];
+  religions: string[];
+  socialStructure: string;
+}
+
+export interface LocationClimate {
+  temperatureRange: string;
+  seasons: string[];
+  precipitation: string;
+  weatherEvents: string[];
+}
+
+// Enhanced Location interface for AGENT 4 - Hierarchical System
+export interface EnhancedLocation {
+  // Base properties (similar to Location but with expanded type)
+  id: string;
+  campaignId: string;
+  name: string;
+  type: LocationType;
+  coords: {
+    lat: number;
+    lng: number;
+  };
+  description: string;
+  npcs: string[]; // NPC IDs
+  quests: string[]; // Quest IDs
+
+  // Enhanced properties
   parentLocationId?: string;
   subLocations: string[]; // Child location IDs
+  hierarchyLevel: number;
   images: LocationImage[];
   detailedDescription: string;
+
+  // Detailed information
+  geography: LocationGeography;
+  architecture: LocationArchitecture;
+  politics: LocationPolitics;
+  economy: LocationEconomy;
+  culture: LocationCulture;
+  climate: LocationClimate;
+
+  // Story elements
   history: string;
+  legends: string[];
   rumors: string[];
   secrets: string[];
-  climate: string;
+  notableFeatures: string[];
+  magicalProperties: string[];
+
+  // Population and size
   population?: number;
-  government?: string;
-  economy?: string;
+  size: 'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'massive';
+
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -49,6 +144,30 @@ export interface LocationImage {
   uploadedAt: Date;
 }
 
+// NPC Relationship System
+export type RelationshipType =
+  | 'family' | 'spouse' | 'parent' | 'child' | 'sibling'
+  | 'friend' | 'close_friend' | 'acquaintance'
+  | 'enemy' | 'rival' | 'nemesis'
+  | 'business_partner' | 'employer' | 'employee'
+  | 'political_ally' | 'political_enemy'
+  | 'mentor' | 'student' | 'colleague'
+  | 'romantic_interest' | 'ex_lover'
+  | 'guild_member' | 'religious_ally'
+  | 'unknown' | 'neutral';
+
+export interface NPCRelationship {
+  id: string;
+  fromNpcId: string;
+  toNpcId: string;
+  relationshipType: RelationshipType;
+  strength: 'weak' | 'moderate' | 'strong' | 'intense';
+  description: string;
+  isPublic: boolean; // Whether this relationship is known publicly
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface NPC {
   id: string;
   campaignId: string;
@@ -59,26 +178,17 @@ export interface NPC {
   stats: Record<string, any>;
   quests: string[]; // Quest IDs
   portraitUrl?: string;
+  relationships: string[]; // NPCRelationship IDs
 }
 
 // Enhanced NPC interface for AGENT 2
 export interface EnhancedNPC extends NPC {
-  relationships: NPCRelationship[];
   notes: string;
   backstory: string;
   goals: string[];
   secrets: string[];
   createdAt?: Date;
   updatedAt?: Date;
-}
-
-export interface NPCRelationship {
-  id: string;
-  targetNpcId: string;
-  type: 'ally' | 'enemy' | 'neutral' | 'romantic' | 'family' | 'business';
-  strength: number; // 1-10
-  description: string;
-  createdAt: Date;
 }
 
 export interface Quest {
@@ -179,7 +289,7 @@ export interface AppState {
   user: User | null;
   currentCampaign: Campaign | null;
   campaigns: Campaign[];
-  locations: Location[];
+  locations: EnhancedLocation[];
   npcs: NPC[];
   quests: Quest[];
   mapState: MapState;
@@ -440,7 +550,7 @@ export interface QuestTimelineEvent {
 
 export interface LocationFormData {
   name: string;
-  type: Location['type'];
+  type: LocationType;
   coords: {
     lat: number;
     lng: number;
@@ -487,7 +597,7 @@ export type CreateEnhancedLocationData = Omit<EnhancedLocation, 'id' | 'createdA
 
 // Location-specific types for AGENT 4
 export interface LocationFilterCriteria {
-  type?: Location['type'][];
+  type?: LocationType[];
   parentLocationId?: string;
   hasSubLocations?: boolean;
   hasImages?: boolean;
@@ -512,9 +622,9 @@ export interface LocationHierarchyNode {
   depth: number;
 }
 
-export interface LocationFormData {
+export interface EnhancedLocationFormData {
   name: string;
-  type: Location['type'];
+  type: LocationType;
   coords: {
     lat: number;
     lng: number;

@@ -1,4 +1,4 @@
-import type { Campaign, Location, NPC, Quest } from '@/types';
+import type { Campaign, EnhancedLocation, NPC, Quest } from '@/types';
 
 // Enhanced AI command processing interfaces
 export interface AICommand {
@@ -11,7 +11,7 @@ export interface AICommand {
 
 export interface CampaignContext {
   campaign: Campaign;
-  locations: Location[];
+  locations: EnhancedLocation[];
   npcs: NPC[];
   quests: Quest[];
 }
@@ -19,7 +19,7 @@ export interface CampaignContext {
 export interface ParsedContent {
   npcs?: Partial<NPC>[];
   quests?: Partial<Quest>[];
-  locations?: Partial<Location>[];
+  locations?: Partial<EnhancedLocation>[];
   suggestions?: string[];
   followUpQuestions?: string[];
 }

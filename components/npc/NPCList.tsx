@@ -258,7 +258,7 @@ export function NPCList({ className = '' }: NPCListProps) {
                 </label>
                 <select
                   value={filterCriteria.relationshipType || ''}
-                  onChange={(e) => setFilterCriteria({ ...filterCriteria, relationshipType: e.target.value as NPCRelationship['type'] || undefined })}
+                  onChange={(e) => setFilterCriteria({ ...filterCriteria, relationshipType: e.target.value as any || undefined })}
                   className="input-primary"
                 >
                   <option value="">Any</option>

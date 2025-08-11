@@ -95,8 +95,7 @@ export function useLocations(): UseLocationsReturn {
   const locations = useMemo(() => {
     if (!currentCampaign) return [];
     return storeLocations
-      .filter(location => location.campaignId === currentCampaign.id)
-      .map(enhanceLocation);
+      .filter(location => location.campaignId === currentCampaign.id);
   }, [storeLocations, currentCampaign]);
 
   // Filtered and sorted locations
@@ -108,8 +107,7 @@ export function useLocations(): UseLocationsReturn {
 
   // Selected location
   const selectedLocation = useMemo(() => {
-    const selected = getSelectedLocation();
-    return selected ? enhanceLocation(selected) : undefined;
+    return getSelectedLocation();
   }, [getSelectedLocation]);
 
   // Location hierarchy
@@ -132,16 +130,54 @@ export function useLocations(): UseLocationsReturn {
 
     setIsCreating(true);
     try {
-      const locationData = {
-        ...data,
+      // Convert enhanced location to basic location for storage
+      const getBasicLocationType = (enhancedType: string): 'city' | 'village' | 'landmark' | 'dungeon' => {
+        switch (enhancedType) {
+          case 'continent':
+          case 'region':
+          case 'temple':
+          case 'ruins':
+          case 'monument':
+          case 'bridge':
+          case 'crossroads':
+            return 'landmark';
+          case 'country':
+          case 'kingdom':
+          case 'province':
+          case 'state':
+          case 'city':
+            return 'city';
+          case 'town':
+          case 'village':
+            return 'village';
+          case 'dungeon':
+            return 'dungeon';
+          default:
+            return 'landmark';
+        }
+      };
+
+      const basicLocationData = {
         campaignId: currentCampaign.id,
+        name: data.name,
+        type: getBasicLocationType(data.type),
+        coords: data.coords,
+        description: data.description,
         npcs: [],
         quests: [],
       };
 
-      const locationId = await LocationService.createLocation(locationData);
-      const newLocation = { ...locationData, id: locationId };
-      addLocation(newLocation);
+      const locationId = await LocationService.createLocation(basicLocationData);
+
+      // Create the full enhanced location for the store
+      const locationData = {
+        ...data,
+        id: locationId,
+        campaignId: currentCampaign.id,
+        npcs: [],
+        quests: [],
+      };
+      addLocation(locationData);
 
       // Update parent location's subLocations if applicable
       if (data.parentLocationId) {
@@ -181,12 +217,55 @@ export function useLocations(): UseLocationsReturn {
 
     setIsUpdating(true);
     try {
+      // Convert enhanced location updates to basic location format for storage
+      const basicUpdateData: any = {
+        updatedAt: new Date(),
+      };
+
+      // Only include fields that exist in the basic Location interface
+      if (updates.name !== undefined) basicUpdateData.name = updates.name;
+      if (updates.description !== undefined) basicUpdateData.description = updates.description;
+      if (updates.coords !== undefined) basicUpdateData.coords = updates.coords;
+      if (updates.npcs !== undefined) basicUpdateData.npcs = updates.npcs;
+      if (updates.quests !== undefined) basicUpdateData.quests = updates.quests;
+
+      // Convert enhanced type to basic type if provided
+      if (updates.type !== undefined) {
+        const getBasicLocationType = (enhancedType: string): 'city' | 'village' | 'landmark' | 'dungeon' => {
+          switch (enhancedType) {
+            case 'continent':
+            case 'region':
+            case 'temple':
+            case 'ruins':
+            case 'monument':
+            case 'bridge':
+            case 'crossroads':
+              return 'landmark';
+            case 'country':
+            case 'kingdom':
+            case 'province':
+            case 'state':
+            case 'city':
+              return 'city';
+            case 'town':
+            case 'village':
+              return 'village';
+            case 'dungeon':
+              return 'dungeon';
+            default:
+              return 'landmark';
+          }
+        };
+        basicUpdateData.type = getBasicLocationType(updates.type);
+      }
+
+      await LocationService.updateLocation(locationId, basicUpdateData);
+
+      // Update the store with the full enhanced data
       const updateData = {
         ...updates,
         updatedAt: new Date(),
       };
-
-      await LocationService.updateLocation(locationId, updateData);
       updateStoreLocation(locationId, updateData);
       return true;
     } catch (error) {

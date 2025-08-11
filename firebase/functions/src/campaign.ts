@@ -1,7 +1,13 @@
 import { Request, Response } from 'express';
-import * as admin from 'firebase-admin';
+import { initializeApp, getApps } from 'firebase-admin/app';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
-const db = admin.firestore();
+// Initialize Firebase Admin
+if (getApps().length === 0) {
+  initializeApp();
+}
+
+const db = getFirestore();
 
 export async function getCampaignData(req: Request, res: Response) {
   try {
@@ -66,7 +72,7 @@ export async function saveMapState(req: Request, res: Response) {
     // Update campaign with map state
     await db.collection('campaigns').doc(campaignId).update({
       mapState,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
 
     return res.status(200).json({

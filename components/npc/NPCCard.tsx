@@ -35,9 +35,8 @@ export function NPCCard({
   const [showDetails, setShowDetails] = useState(false);
 
   const location = locations.find(loc => loc.id === npc.locationId);
-  const relatedNPCs = npcs.filter(n => 
-    npc.relationships.some(rel => rel.targetNpcId === n.id)
-  );
+  // TODO: Implement relationship lookup with new relationship system
+  const relatedNPCs: any[] = [];
 
   // Get relationship type icon
   const getRelationshipIcon = (type: string) => {
@@ -202,7 +201,7 @@ export function NPCCard({
         </div>
         <div className="bg-gray-50 rounded-lg p-2">
           <div className="text-lg font-semibold text-gray-900">
-            {npc.relationships.length}
+            {npc.relationships?.length || 0}
           </div>
           <div className="text-xs text-gray-500">Relationships</div>
         </div>
@@ -214,30 +213,14 @@ export function NPCCard({
         </div>
       </div>
 
-      {/* Relationships Preview */}
-      {npc.relationships.length > 0 && (
+      {/* Relationships Preview - TODO: Implement with new relationship system */}
+      {npc.relationships && npc.relationships.length > 0 && (
         <div className="mb-4">
           <h4 className="text-sm font-medium text-gray-900 mb-2">Relationships</h4>
           <div className="flex flex-wrap gap-2">
-            {npc.relationships.slice(0, 3).map((relationship) => {
-              const targetNPC = npcs.find(n => n.id === relationship.targetNpcId);
-              if (!targetNPC) return null;
-
-              return (
-                <div
-                  key={relationship.id}
-                  className="flex items-center space-x-1 bg-gray-100 rounded-full px-2 py-1 text-xs"
-                >
-                  {getRelationshipIcon(relationship.type)}
-                  <span className="text-gray-700">{targetNPC.name}</span>
-                </div>
-              );
-            })}
-            {npc.relationships.length > 3 && (
-              <div className="bg-gray-100 rounded-full px-2 py-1 text-xs text-gray-500">
-                +{npc.relationships.length - 3} more
-              </div>
-            )}
+            <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+              {npc.relationships.length} relationship{npc.relationships.length !== 1 ? 's' : ''}
+            </div>
           </div>
         </div>
       )}

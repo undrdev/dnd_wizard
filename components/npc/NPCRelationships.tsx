@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon, HeartIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import type { EnhancedNPC, NPCRelationship } from '@/types';
+import type { EnhancedNPC, NPCRelationship, RelationshipType } from '@/types';
 import {
   getRelationshipTypeDisplay,
   getRelationshipStrengthDisplay,
@@ -17,10 +17,13 @@ interface NPCRelationshipsProps {
 }
 
 interface RelationshipFormData {
-  targetNpcId: string;
-  type: NPCRelationship['type'];
-  strength: number;
+  fromNpcId: string;
+  toNpcId: string;
+  relationshipType: RelationshipType;
+  strength: 'weak' | 'moderate' | 'strong' | 'intense';
   description: string;
+  isPublic: boolean;
+  updatedAt: Date;
 }
 
 export function NPCRelationships({
@@ -34,49 +37,68 @@ export function NPCRelationships({
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingRelationship, setEditingRelationship] = useState<string | null>(null);
   const [formData, setFormData] = useState<RelationshipFormData>({
-    targetNpcId: '',
-    type: 'neutral',
-    strength: 5,
+    fromNpcId: npc.id,
+    toNpcId: '',
+    relationshipType: 'neutral',
+    strength: 'moderate',
     description: '',
+    isPublic: true,
+    updatedAt: new Date(),
   });
 
   // Available NPCs (excluding current NPC and already related NPCs)
-  const availableNPCs = allNPCs.filter(n => 
-    n.id !== npc.id && 
-    !npc.relationships.some(rel => rel.targetNpcId === n.id)
-  );
+  // TODO: Update with new relationship system
+  const availableNPCs = allNPCs.filter(n => n.id !== npc.id);
 
   // Get relationship type icon
-  const getRelationshipIcon = (type: NPCRelationship['type']) => {
+  const getRelationshipIcon = (type: RelationshipType) => {
     switch (type) {
-      case 'ally':
+      case 'friend':
+      case 'close_friend':
+      case 'political_ally':
         return <div className="h-4 w-4 rounded-full bg-green-500" />;
       case 'enemy':
+      case 'rival':
+      case 'nemesis':
+      case 'political_enemy':
         return <XMarkIcon className="h-4 w-4 text-red-500" />;
-      case 'romantic':
+      case 'romantic_interest':
+      case 'ex_lover':
+      case 'spouse':
         return <HeartIcon className="h-4 w-4 text-pink-500" />;
       case 'family':
+      case 'parent':
+      case 'child':
+      case 'sibling':
         return <HeartIcon className="h-4 w-4 text-blue-500" />;
-      case 'business':
+      case 'business_partner':
+      case 'employer':
+      case 'employee':
         return <div className="h-4 w-4 rounded-full bg-yellow-500" />;
+      case 'mentor':
+      case 'student':
+        return <div className="h-4 w-4 rounded-full bg-purple-500" />;
       default:
         return <div className="h-4 w-4 rounded-full bg-gray-400" />;
     }
   };
 
   // Get strength color
-  const getStrengthColor = (strength: number) => {
-    if (strength >= 8) return 'text-green-600';
-    if (strength >= 6) return 'text-blue-600';
-    if (strength >= 4) return 'text-yellow-600';
-    return 'text-red-600';
+  const getStrengthColor = (strength: string) => {
+    switch (strength) {
+      case 'intense': return 'text-green-600';
+      case 'strong': return 'text-blue-600';
+      case 'moderate': return 'text-yellow-600';
+      case 'weak': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
   };
 
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.targetNpcId || !formData.description.trim()) {
+    if (!formData.toNpcId || !formData.description.trim()) {
       return;
     }
 
@@ -89,23 +111,14 @@ export function NPCRelationships({
     }
 
     setFormData({
-      targetNpcId: '',
-      type: 'neutral',
-      strength: 5,
+      fromNpcId: npc.id,
+      toNpcId: '',
+      relationshipType: 'neutral',
+      strength: 'moderate',
       description: '',
+      isPublic: true,
+      updatedAt: new Date(),
     });
-  };
-
-  // Start editing a relationship
-  const startEdit = (relationship: NPCRelationship) => {
-    setFormData({
-      targetNpcId: relationship.targetNpcId,
-      type: relationship.type,
-      strength: relationship.strength,
-      description: relationship.description,
-    });
-    setEditingRelationship(relationship.id);
-    setShowAddForm(true);
   };
 
   // Cancel editing
@@ -113,10 +126,13 @@ export function NPCRelationships({
     setShowAddForm(false);
     setEditingRelationship(null);
     setFormData({
-      targetNpcId: '',
-      type: 'neutral',
-      strength: 5,
+      fromNpcId: npc.id,
+      toNpcId: '',
+      relationshipType: 'neutral',
+      strength: 'moderate',
       description: '',
+      isPublic: true,
+      updatedAt: new Date(),
     });
   };
 
@@ -136,64 +152,15 @@ export function NPCRelationships({
         )}
       </div>
 
-      {/* Existing Relationships */}
-      {npc.relationships.length > 0 ? (
+      {/* Existing Relationships - TODO: Implement with new relationship system */}
+      {npc.relationships && npc.relationships.length > 0 ? (
         <div className="space-y-3">
-          {npc.relationships.map((relationship) => {
-            const targetNPC = allNPCs.find(n => n.id === relationship.targetNpcId);
-            if (!targetNPC) return null;
-
-            return (
-              <div
-                key={relationship.id}
-                className="bg-gray-50 rounded-lg p-4 border border-gray-200"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      {getRelationshipIcon(relationship.type)}
-                      <span className="font-medium text-gray-900">
-                        {targetNPC.name}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        ({getRelationshipTypeDisplay(relationship.type)})
-                      </span>
-                    </div>
-                    
-                    <div className="mb-2">
-                      <span className="text-sm text-gray-600">Strength: </span>
-                      <span className={`text-sm font-medium ${getStrengthColor(relationship.strength)}`}>
-                        {relationship.strength}/10 ({getRelationshipStrengthDisplay(relationship.strength)})
-                      </span>
-                    </div>
-                    
-                    <p className="text-sm text-gray-700">{relationship.description}</p>
-                  </div>
-
-                  {!disabled && (
-                    <div className="flex space-x-1 ml-4">
-                      <button
-                        type="button"
-                        onClick={() => startEdit(relationship)}
-                        className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                        title="Edit relationship"
-                      >
-                        <PencilIcon className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onRemoveRelationship(relationship.id)}
-                        className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                        title="Remove relationship"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-blue-800">
+              This NPC has {npc.relationships.length} relationship{npc.relationships.length !== 1 ? 's' : ''}.
+              Relationship details will be implemented with the new relationship system.
+            </p>
+          </div>
         </div>
       ) : (
         <div className="text-center py-6 text-gray-500">
@@ -216,8 +183,8 @@ export function NPCRelationships({
                 NPC
               </label>
               <select
-                value={formData.targetNpcId}
-                onChange={(e) => setFormData(prev => ({ ...prev, targetNpcId: e.target.value }))}
+                value={formData.toNpcId}
+                onChange={(e) => setFormData(prev => ({ ...prev, toNpcId: e.target.value }))}
                 className="input-primary"
                 required
                 disabled={!!editingRelationship}
@@ -237,8 +204,8 @@ export function NPCRelationships({
                 Relationship Type
               </label>
               <select
-                value={formData.type}
-                onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as NPCRelationship['type'] }))}
+                value={formData.relationshipType}
+                onChange={(e) => setFormData(prev => ({ ...prev, relationshipType: e.target.value as RelationshipType }))}
                 className="input-primary"
                 required
               >
@@ -254,16 +221,18 @@ export function NPCRelationships({
             {/* Relationship Strength */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Strength ({formData.strength}/10 - {getRelationshipStrengthDisplay(formData.strength)})
+                Strength
               </label>
-              <input
-                type="range"
-                min="1"
-                max="10"
+              <select
                 value={formData.strength}
-                onChange={(e) => setFormData(prev => ({ ...prev, strength: parseInt(e.target.value) }))}
-                className="w-full"
-              />
+                onChange={(e) => setFormData(prev => ({ ...prev, strength: e.target.value as any }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="weak">Weak</option>
+                <option value="moderate">Moderate</option>
+                <option value="strong">Strong</option>
+                <option value="intense">Intense</option>
+              </select>
             </div>
 
             {/* Description */}
@@ -286,7 +255,7 @@ export function NPCRelationships({
               <button
                 type="submit"
                 className="btn-primary"
-                disabled={!formData.targetNpcId || !formData.description.trim()}
+                disabled={!formData.toNpcId || !formData.description.trim()}
               >
                 {editingRelationship ? 'Update' : 'Add'} Relationship
               </button>

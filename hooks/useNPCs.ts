@@ -220,34 +220,29 @@ export function useNPCs(): UseNPCsReturn {
     }
 
     const relationship = createRelationship(
-      relationshipData.targetNpcId,
-      relationshipData.type,
+      relationshipData.toNpcId,
+      relationshipData.relationshipType,
       relationshipData.strength,
-      relationshipData.description
+      relationshipData.description,
+      npcId
     );
 
-    const updatedRelationships = [...npc.relationships, relationship];
+    // TODO: Store relationship in a separate relationships store
+    // For now, just store the relationship ID in the NPC's relationships array
+    const updatedRelationships = [...(npc.relationships || []), relationship.id];
     return updateNPC(npcId, { relationships: updatedRelationships });
   }, [npcs, updateNPC, setError]);
 
-  // Update relationship
+  // Update relationship - TODO: Implement with relationship store
   const updateRelationship = useCallback(async (
     npcId: string,
     relationshipId: string,
     data: Partial<NPCRelationship>
   ): Promise<boolean> => {
-    const npc = npcs.find(n => n.id === npcId);
-    if (!npc) {
-      setError('NPC not found');
-      return false;
-    }
-
-    const updatedRelationships = npc.relationships.map(rel =>
-      rel.id === relationshipId ? { ...rel, ...data } : rel
-    );
-
-    return updateNPC(npcId, { relationships: updatedRelationships });
-  }, [npcs, updateNPC, setError]);
+    // TODO: Update relationship in separate relationship store
+    console.log('Update relationship not yet implemented with new relationship system');
+    return false;
+  }, []);
 
   // Remove relationship
   const removeRelationship = useCallback(async (
@@ -260,7 +255,8 @@ export function useNPCs(): UseNPCsReturn {
       return false;
     }
 
-    const updatedRelationships = npc.relationships.filter(rel => rel.id !== relationshipId);
+    // Remove relationship ID from NPC's relationships array
+    const updatedRelationships = (npc.relationships || []).filter(id => id !== relationshipId);
     return updateNPC(npcId, { relationships: updatedRelationships });
   }, [npcs, updateNPC, setError]);
 
@@ -274,8 +270,10 @@ export function useNPCs(): UseNPCsReturn {
     const npc = npcs.find(n => n.id === npcId);
     if (!npc) return [];
 
-    const relatedIds = npc.relationships.map(rel => rel.targetNpcId);
-    return npcs.filter(n => relatedIds.includes(n.id));
+    // TODO: Update with new relationship system - relationships are now just IDs
+    // const relatedIds = npc.relationships.map(rel => rel.toNpcId);
+    // return npcs.filter(n => relatedIds.includes(n.id));
+    return []; // Temporary until relationship system is fully implemented
   }, [npcs]);
 
   // Clear all filters

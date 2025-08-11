@@ -16,15 +16,73 @@ export function enhanceLocation(location: Location): EnhancedLocation {
     ...location,
     parentLocationId: undefined,
     subLocations: [],
+    hierarchyLevel: 3,
     images: [],
     detailedDescription: location.description || '',
+
+    // Enhanced data structures
+    geography: {
+      terrain: 'Mixed',
+      topography: 'Varied',
+      naturalFeatures: [],
+      climateZone: 'Temperate',
+      flora: [],
+      fauna: [],
+      naturalResources: [],
+      weatherPatterns: 'Seasonal',
+      naturalDisasters: []
+    },
+    architecture: {
+      buildingStyles: [],
+      materials: [],
+      cityLayout: 'Organic',
+      fortifications: 'Basic',
+      notableBuildings: []
+    },
+    politics: {
+      governmentType: 'Local council',
+      rulers: [],
+      laws: [],
+      conflicts: [],
+      alliances: [],
+      politicalStatus: 'Stable'
+    },
+    economy: {
+      tradeGoods: [],
+      currency: 'Gold pieces',
+      markets: [],
+      guilds: [],
+      industries: [],
+      economicStatus: 'Moderate'
+    },
+    culture: {
+      demographics: [],
+      languages: ['Common'],
+      customs: [],
+      festivals: [],
+      religions: [],
+      socialStructure: 'Traditional'
+    },
+    climate: {
+      temperatureRange: 'Moderate',
+      seasons: ['Spring', 'Summer', 'Autumn', 'Winter'],
+      precipitation: 'Regular',
+      weatherEvents: []
+    },
+
+    // Story elements
     history: '',
+    legends: [],
     rumors: [],
     secrets: [],
-    climate: '',
-    population: undefined,
-    government: undefined,
-    economy: undefined,
+    notableFeatures: [],
+    magicalProperties: [],
+
+    // Population and size
+    population: 0,
+    size: 'medium',
+
+    // Metadata
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -85,9 +143,9 @@ export function filterLocationsBySearch(
     location.description.toLowerCase().includes(term) ||
     location.detailedDescription.toLowerCase().includes(term) ||
     location.type.toLowerCase().includes(term) ||
-    location.climate.toLowerCase().includes(term) ||
-    location.government?.toLowerCase().includes(term) ||
-    location.economy?.toLowerCase().includes(term) ||
+    location.climate.temperatureRange.toLowerCase().includes(term) ||
+    location.politics.governmentType.toLowerCase().includes(term) ||
+    location.economy.economicStatus.toLowerCase().includes(term) ||
     location.history.toLowerCase().includes(term) ||
     location.rumors.some(rumor => rumor.toLowerCase().includes(term))
   );
@@ -136,7 +194,7 @@ export function filterLocationsByCriteria(
 
     // Filter by climate
     if (criteria.climate && criteria.climate.length > 0) {
-      if (!criteria.climate.includes(location.climate)) return false;
+      if (!criteria.climate.includes(location.climate.temperatureRange)) return false;
     }
 
     return true;

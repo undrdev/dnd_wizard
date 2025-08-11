@@ -1,7 +1,13 @@
 import { Request, Response } from 'express';
-import * as admin from 'firebase-admin';
+import { initializeApp, getApps } from 'firebase-admin/app';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
-const db = admin.firestore();
+// Initialize Firebase Admin
+if (getApps().length === 0) {
+  initializeApp();
+}
+
+const db = getFirestore();
 
 // Simple placeholder functions for AI parsing
 function parseCommand(command: string, context?: any) {
@@ -176,27 +182,27 @@ async function updateAIContext(campaignId: string, userMessage: string, aiRespon
   const newMessage = {
     role: 'user',
     content: userMessage,
-    timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    timestamp: FieldValue.serverTimestamp(),
   };
 
   const newResponse = {
     role: 'assistant',
     content: JSON.stringify(aiResponse),
-    timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    timestamp: FieldValue.serverTimestamp(),
   };
 
   if (contextDoc.exists) {
     await contextRef.update({
-      tokens: admin.firestore.FieldValue.arrayUnion(userMessage),
-      conversationHistory: admin.firestore.FieldValue.arrayUnion(newMessage, newResponse),
-      lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+      tokens: FieldValue.arrayUnion(userMessage),
+      conversationHistory: FieldValue.arrayUnion(newMessage, newResponse),
+      lastUpdated: FieldValue.serverTimestamp(),
     });
   } else {
     await contextRef.set({
       campaignId,
       tokens: [userMessage],
       conversationHistory: [newMessage, newResponse],
-      lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+      lastUpdated: FieldValue.serverTimestamp(),
     });
   }
 }
