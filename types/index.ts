@@ -568,11 +568,11 @@ export interface AIProvider {
 export interface AIProviderConfig {
   openai?: {
     apiKey: string;
-    model: 'gpt-4' | 'gpt-4-turbo' | 'gpt-3.5-turbo';
+    model: 'gpt-4o' | 'gpt-4o-mini' | 'gpt-4-turbo' | 'gpt-3.5-turbo';
   };
   anthropic?: {
     apiKey: string;
-    model: 'claude-3-opus' | 'claude-3-sonnet' | 'claude-3-haiku';
+    model: 'claude-3-5-sonnet-20241022' | 'claude-3-5-haiku-20241022' | 'claude-3-opus-20240229';
   };
 }
 

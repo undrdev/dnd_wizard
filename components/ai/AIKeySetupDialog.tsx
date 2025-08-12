@@ -32,7 +32,7 @@ export function AIKeySetupDialog({ isOpen, onClose, onSetupComplete }: AIKeySetu
       const success = await apiKeyStorage.saveAPIKeys({
         [selectedProvider]: {
           apiKey: apiKey.trim(),
-          model: selectedProvider === 'openai' ? 'gpt-4-turbo' : 'claude-3-sonnet'
+          model: selectedProvider === 'openai' ? 'gpt-4o' : 'claude-3-5-sonnet-20241022'
         }
       });
 
@@ -44,12 +44,12 @@ export function AIKeySetupDialog({ isOpen, onClose, onSetupComplete }: AIKeySetu
       if (selectedProvider === 'openai') {
         setOpenAIConfig({
           apiKey: apiKey.trim(),
-          model: 'gpt-4-turbo'
+          model: 'gpt-4o'
         });
       } else {
         setAnthropicConfig({
           apiKey: apiKey.trim(),
-          model: 'claude-3-sonnet'
+          model: 'claude-3-5-sonnet-20241022'
         });
       }
 

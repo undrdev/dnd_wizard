@@ -13,9 +13,9 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
   const { providers, currentProvider, setOpenAIConfig, setAnthropicConfig, setCurrentProvider, saveAPIKeysToFirebase } = useAIStore();
   
   const [openaiApiKey, setOpenaiApiKey] = useState(providers.openai?.apiKey || '');
-  const [openaiModel, setOpenaiModel] = useState(providers.openai?.model || 'gpt-4');
+  const [openaiModel, setOpenaiModel] = useState(providers.openai?.model || 'gpt-4o');
   const [anthropicApiKey, setAnthropicApiKey] = useState(providers.anthropic?.apiKey || '');
-  const [anthropicModel, setAnthropicModel] = useState(providers.anthropic?.model || 'claude-3-sonnet');
+  const [anthropicModel, setAnthropicModel] = useState(providers.anthropic?.model || 'claude-3-5-sonnet-20241022');
   const [selectedProvider, setSelectedProvider] = useState<'openai' | 'anthropic'>(currentProvider || 'openai');
   
   const [showOpenaiKey, setShowOpenaiKey] = useState(false);
@@ -61,15 +61,16 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
   };
 
   const openaiModels = [
-    { value: 'gpt-4', label: 'GPT-4' },
+    { value: 'gpt-4o', label: 'GPT-4o' },
+    { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
     { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
     { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
   ];
 
   const anthropicModels = [
-    { value: 'claude-3-opus', label: 'Claude 3 Opus' },
-    { value: 'claude-3-sonnet', label: 'Claude 3 Sonnet' },
-    { value: 'claude-3-haiku', label: 'Claude 3 Haiku' },
+    { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
+    { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku' },
+    { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus' },
   ];
 
   return (
