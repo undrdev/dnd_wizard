@@ -814,3 +814,77 @@ export interface RealtimeAppState extends AppState {
   optimisticUpdates: OptimisticUpdate[];
   performanceMetrics?: PerformanceMetrics;
 }
+
+// AI Usage Logging Types
+export interface AIUsageLog {
+  id: string;
+  campaignId: string;
+  userId: string;
+  command: string;
+  commandType: 'campaign_generation' | 'npc_creation' | 'quest_creation' | 'location_creation' | 'content_generation' | 'suggestion' | 'other';
+  provider: 'openai' | 'anthropic';
+  model: string;
+  
+  // Token usage
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+  
+  // Cost tracking
+  estimatedCost: number;
+  currency: string;
+  
+  // Response data
+  responseLength: number;
+  success: boolean;
+  errorType?: string;
+  errorMessage?: string;
+  
+  // User feedback
+  userFeedback?: 'accepted' | 'rejected' | 'modified';
+  feedbackReason?: string;
+  feedbackTimestamp?: Date;
+  
+  // Metadata
+  processingTimeMs: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AIUsageStats {
+  totalCommands: number;
+  totalTokens: number;
+  totalCost: number;
+  successRate: number;
+  averageTokensPerCommand: number;
+  averageCostPerCommand: number;
+  mostUsedCommands: Array<{
+    commandType: string;
+    count: number;
+    percentage: number;
+  }>;
+  userFeedbackStats: {
+    accepted: number;
+    rejected: number;
+    modified: number;
+    totalWithFeedback: number;
+  };
+  costBreakdown: {
+    byProvider: Record<string, number>;
+    byModel: Record<string, number>;
+    byCommandType: Record<string, number>;
+  };
+}
+
+export interface AIUsageFilters {
+  startDate?: Date;
+  endDate?: Date;
+  campaignId?: string;
+  userId?: string;
+  commandType?: AIUsageLog['commandType'];
+  provider?: AIUsageLog['provider'];
+  model?: string;
+  success?: boolean;
+  hasFeedback?: boolean;
+  userFeedback?: AIUsageLog['userFeedback'];
+}

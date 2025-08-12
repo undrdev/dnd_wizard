@@ -6,6 +6,8 @@ import { useAIStore } from '@/stores/useAIStore';
 import { useToast } from '@/components/ui/Toast';
 import { CampaignService } from '@/lib/firestore';
 import { AIErrorDisplay } from '@/components/ui/AIErrorDisplay';
+import { AIGenerationFeedback, AIGenerationFeedbackCompact } from '@/components/ui/AIGenerationFeedback';
+import { aiUsageLogger } from '@/lib/aiUsageLogging';
 import type { CampaignFormData, CreateCampaignData } from '@/types';
 import type { AIError } from '@/lib/aiErrorHandling';
 import { v4 as uuidv4 } from 'uuid';
@@ -31,6 +33,12 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiError, setAiError] = useState<AIError | null>(null);
+  const [usageEstimate, setUsageEstimate] = useState<{
+    inputTokens: number;
+    outputTokens: number;
+    estimatedCost: number;
+  } | null>(null);
+  const [lastLogId, setLastLogId] = useState<string | null>(null);
 
 
   const handleInputChange = (field: keyof CampaignFormData, value: string | boolean) => {
@@ -50,6 +58,8 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
 
     setIsGenerating(true);
     setAiError(null); // Clear any previous errors
+    setUsageEstimate(null);
+    setLastLogId(null);
     try {
       const prompt = `Generate a D&D campaign with the following specifications:
         - Concept: ${formData.concept || 'Any fantasy setting'}
@@ -215,6 +225,9 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
               maxTokens: 2000,
               provider: currentProvider,
               apiKey: providers[currentProvider].apiKey,
+              campaignId: 'temp', // Will be updated after campaign creation
+              userId: user?.uid || 'anonymous',
+              command: 'Generate campaign with AI',
             }),
           });
 
@@ -245,6 +258,11 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
                   generatedAt: new Date().toISOString(),
                 };
 
+                // Store usage information
+                if (data.usage) {
+                  setUsageEstimate(data.usage);
+                }
+                
                 addToast({
                   type: 'success',
                   title: 'Campaign Enhanced',
@@ -422,6 +440,26 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
                 onRetry={handleGenerateWithAI}
                 onDismiss={() => setAiError(null)}
               />
+            )}
+
+            {/* Usage Estimate Display */}
+            {usageEstimate && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-blue-900">AI Generation Complete</p>
+                    <p className="text-xs text-blue-700">
+                      Used {usageEstimate.inputTokens + usageEstimate.outputTokens} tokens • Estimated cost: ${usageEstimate.estimatedCost?.toFixed(4) || '0.0000'}
+                    </p>
+                  </div>
+                  {lastLogId && (
+                    <AIGenerationFeedbackCompact
+                      logId={lastLogId}
+                      className="ml-2"
+                    />
+                  )}
+                </div>
+              </div>
             )}
 
             {formData.generateWithAI && (

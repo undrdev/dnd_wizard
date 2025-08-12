@@ -3,6 +3,79 @@ import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { parseOpenAIError, parseAnthropicError, parseNetworkError, type AIError } from '../../../lib/aiErrorHandling';
 
+// Simple token estimation (in a real implementation, you'd use a proper tokenizer)
+function estimateTokens(text: string): number {
+  // Rough estimation: 1 token ≈ 4 characters for English text
+  return Math.ceil(text.length / 4);
+}
+
+// Determine command type from command string
+function determineCommandType(command: string): string {
+  const lowerCommand = command.toLowerCase();
+  
+  if (lowerCommand.includes('campaign') || lowerCommand.includes('generate campaign')) {
+    return 'campaign_generation';
+  }
+  if (lowerCommand.includes('npc') || lowerCommand.includes('character') || lowerCommand.includes('person')) {
+    return 'npc_creation';
+  }
+  if (lowerCommand.includes('quest') || lowerCommand.includes('mission') || lowerCommand.includes('adventure')) {
+    return 'quest_creation';
+  }
+  if (lowerCommand.includes('location') || lowerCommand.includes('place') || lowerCommand.includes('city') || lowerCommand.includes('town')) {
+    return 'location_creation';
+  }
+  if (lowerCommand.includes('suggest') || lowerCommand.includes('idea')) {
+    return 'suggestion';
+  }
+  if (lowerCommand.includes('generate') || lowerCommand.includes('create') || lowerCommand.includes('make')) {
+    return 'content_generation';
+  }
+  
+  return 'other';
+}
+
+// Calculate estimated cost for token usage
+function calculateEstimatedCost(
+  provider: string,
+  model: string,
+  inputTokens: number,
+  outputTokens: number
+): number {
+  // Simplified cost calculation
+  let inputCostPer1K = 0.01;
+  let outputCostPer1K = 0.03;
+  
+  if (provider === 'openai') {
+    if (model === 'gpt-4') {
+      inputCostPer1K = 0.03;
+      outputCostPer1K = 0.06;
+    } else if (model === 'gpt-4-turbo') {
+      inputCostPer1K = 0.01;
+      outputCostPer1K = 0.03;
+    } else if (model === 'gpt-3.5-turbo') {
+      inputCostPer1K = 0.0015;
+      outputCostPer1K = 0.002;
+    }
+  } else if (provider === 'anthropic') {
+    if (model === 'claude-3-opus') {
+      inputCostPer1K = 0.015;
+      outputCostPer1K = 0.075;
+    } else if (model === 'claude-3-sonnet') {
+      inputCostPer1K = 0.003;
+      outputCostPer1K = 0.015;
+    } else if (model === 'claude-3-haiku') {
+      inputCostPer1K = 0.00025;
+      outputCostPer1K = 0.00125;
+    }
+  }
+  
+  const inputCost = (inputTokens / 1000) * inputCostPer1K;
+  const outputCost = (outputTokens / 1000) * outputCostPer1K;
+  
+  return inputCost + outputCost;
+}
+
 // Initialize Firebase Admin
 if (getApps().length === 0) {
   initializeApp();
@@ -39,23 +112,38 @@ export async function generateContent(req: Request, res: Response) {
   console.log('🔍 Firebase Function: Method:', req.method);
   console.log('🔍 Firebase Function: Headers:', req.headers);
   
+  // Start timing for usage logging
+  const startTime = Date.now();
+  
+  // Extract variables outside try block so they're available in catch
+  let prompt: string = '';
+  let campaignId: string = '';
+  let userId: string = '';
+  let provider: string = 'openai';
+  let apiKey: string = '';
+  let model: string = '';
+  let systemMessage: string = '';
+  let temperature: number = 0.7;
+  let maxTokens: number = 2000;
+  let command: string = '';
+  
   try {
     if (req.method !== 'POST') {
       console.log('❌ Firebase Function: Method not allowed');
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { 
-      prompt, 
-      campaignId, 
-      userId, 
-      provider = 'openai',
-      apiKey,
-      model,
-      systemMessage,
-      temperature = 0.7,
-      maxTokens = 2000
-    } = req.body;
+    const body = req.body;
+    prompt = body.prompt;
+    campaignId = body.campaignId;
+    userId = body.userId;
+    provider = body.provider || 'openai';
+    apiKey = body.apiKey;
+    model = body.model;
+    systemMessage = body.systemMessage;
+    temperature = body.temperature || 0.7;
+    maxTokens = body.maxTokens || 2000;
+    command = body.command || prompt; // Use prompt as command if not specified
     
     console.log('🔍 Firebase Function: Request body:', {
       prompt: prompt ? prompt.substring(0, 100) + '...' : 'undefined',
@@ -119,11 +207,52 @@ export async function generateContent(req: Request, res: Response) {
       await updateAIContext(campaignId, prompt, parsedResult);
     }
 
+    // Log usage if we have campaign and user info
+    if (campaignId && userId) {
+      try {
+        const processingTimeMs = Date.now() - startTime;
+        const inputTokens = estimateTokens(prompt + (systemMessage || ''));
+        const outputTokens = estimateTokens(result);
+        const responseLength = result.length;
+        
+        // Log successful usage
+        await db.collection('aiUsageLogs').add({
+          campaignId,
+          userId,
+          command,
+          commandType: determineCommandType(command),
+          provider,
+          model,
+          inputTokens,
+          outputTokens,
+          totalTokens: inputTokens + outputTokens,
+          estimatedCost: calculateEstimatedCost(provider, model, inputTokens, outputTokens),
+          currency: 'USD',
+          responseLength,
+          success: true,
+          processingTimeMs,
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+        
+        console.log('✅ Firebase Function: Usage logged successfully');
+      } catch (loggingError) {
+        console.error('⚠️ Firebase Function: Failed to log usage:', loggingError);
+        // Don't fail the request if logging fails
+      }
+    }
+
     console.log('✅ Firebase Function: Successfully returning response');
     return res.status(200).json({
       success: true,
       data: parsedResult,
       command: parsedCommand,
+      usage: {
+        inputTokens: estimateTokens(prompt + (systemMessage || '')),
+        outputTokens: estimateTokens(result),
+        totalTokens: estimateTokens(prompt + (systemMessage || '')) + estimateTokens(result),
+        processingTimeMs: Date.now() - startTime,
+      }
     });
   } catch (error) {
     console.error('❌ Firebase Function: Error generating content:', error);
@@ -146,6 +275,41 @@ export async function generateContent(req: Request, res: Response) {
         error: aiError,
         message: aiError.userMessage
       });
+    }
+    
+    // Log error usage if we have campaign and user info
+    if (campaignId && userId) {
+      try {
+        const processingTimeMs = Date.now() - startTime;
+        const inputTokens = estimateTokens(prompt + (systemMessage || ''));
+        
+        // Log failed usage
+        await db.collection('aiUsageLogs').add({
+          campaignId,
+          userId,
+          command,
+          commandType: determineCommandType(command),
+          provider,
+          model,
+          inputTokens,
+          outputTokens: 0,
+          totalTokens: inputTokens,
+          estimatedCost: calculateEstimatedCost(provider, model, inputTokens, 0),
+          currency: 'USD',
+          responseLength: 0,
+          success: false,
+          errorType: aiError?.type || 'unknown',
+          errorMessage: aiError?.message || 'Unknown error',
+          processingTimeMs,
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+        
+        console.log('✅ Firebase Function: Error usage logged successfully');
+      } catch (loggingError) {
+        console.error('⚠️ Firebase Function: Failed to log error usage:', loggingError);
+        // Don't fail the request if logging fails
+      }
     }
     
     // Fallback to generic error
