@@ -3,6 +3,7 @@ import { PaperAirplaneIcon, CogIcon, SparklesIcon, ExclamationTriangleIcon } fro
 import { useAppStore } from '@/stores/useAppStore';
 import { useAIStore } from '@/stores/useAIStore';
 import { useAI } from '@/hooks/useAI';
+import { useToast } from '@/components/ui/Toast';
 import { AISettingsModal } from './AISettingsModal';
 import { AIContentPreview } from './AIContentPreview';
 import { AIKeySetupDialog } from './AIKeySetupDialog';
@@ -18,6 +19,7 @@ export function AIChat() {
 
   const { getCurrentCampaignData } = useAppStore();
   const { hasValidProvider, conversationHistory, currentProvider, loadAPIKeysFromFirebase, isLoadingKeys } = useAIStore();
+  const { addToast } = useToast();
   const {
     isGenerating,
     previewContent,
@@ -54,14 +56,27 @@ export function AIChat() {
   useEffect(() => {
     if (error) {
       console.log('🔍 AIChat: Error detected:', error);
-      // Auto-clear error after 5 seconds
+      
+      // Show error toast
+      addToast({
+        type: 'error',
+        title: 'AI Error',
+        message: error,
+        duration: 8000,
+        action: {
+          label: 'Dismiss',
+          onClick: () => clearError()
+        }
+      });
+      
+      // Auto-clear error after 8 seconds
       const timer = setTimeout(() => {
         console.log('🔍 AIChat: Auto-clearing error');
         clearError();
-      }, 5000);
+      }, 8000);
       return () => clearTimeout(timer);
     }
-  }, [error, clearError]);
+  }, [error, clearError, addToast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,6 +98,14 @@ export function AIChat() {
       console.log('🔍 AIChat: Calling processCommand');
       await processCommand(command);
       console.log('✅ AIChat: Command processed successfully');
+      
+      // Show success toast for successful commands
+      addToast({
+        type: 'success',
+        title: 'Command Processed',
+        message: 'Your AI command has been processed successfully.',
+        duration: 3000
+      });
     } catch (error) {
       console.error('❌ AIChat: Error processing command:', error);
     }

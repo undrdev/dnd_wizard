@@ -39,16 +39,18 @@ export function Layout({ children }: LayoutProps) {
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
-              <div className="flex items-center">
+              <div className="flex items-center min-w-0 flex-1">
                 <div className="flex-shrink-0">
-                  <h1 className="text-xl font-bold text-gray-900">
-                    <span role="img" aria-label="Dice">🎲</span> DnD Wizard
+                  <h1 className="text-lg sm:text-xl font-bold text-gray-900">
+                    <span role="img" aria-label="Dice">🎲</span> 
+                    <span className="hidden sm:inline"> DnD Wizard</span>
+                    <span className="sm:hidden"> DnD</span>
                   </h1>
                 </div>
                 {currentCampaign && (
-                  <div className="ml-6 flex items-center">
-                    <span className="text-sm text-gray-500">Campaign:</span>
-                    <span className="ml-2 text-sm font-medium text-gray-900">
+                  <div className="ml-2 sm:ml-6 flex items-center min-w-0">
+                    <span className="hidden sm:inline text-sm text-gray-500">Campaign:</span>
+                    <span className="text-sm font-medium text-gray-900 truncate">
                       {currentCampaign.title}
                     </span>
                   </div>

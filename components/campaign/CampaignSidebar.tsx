@@ -45,16 +45,16 @@ export function CampaignSidebar({ onClose }: CampaignSidebarProps) {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 flex items-center justify-center px-3 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`flex-1 flex items-center justify-center px-2 sm:px-3 py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
                   ? 'border-primary-500 text-primary-600 bg-primary-50'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <tab.icon className="h-4 w-4 mr-1" />
+              <tab.icon className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">{tab.name}</span>
               {tab.count !== undefined && (
-                <span className="ml-1 bg-gray-200 text-gray-600 text-xs rounded-full px-2 py-0.5">
+                <span className="ml-1 bg-gray-200 text-gray-600 text-xs rounded-full px-1.5 sm:px-2 py-0.5">
                   {tab.count}
                 </span>
               )}
