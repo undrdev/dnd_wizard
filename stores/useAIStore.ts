@@ -19,6 +19,7 @@ interface AIStore {
   setGenerating: (generating: boolean) => void;
   addMessage: (message: AIMessage) => void;
   clearHistory: () => void;
+  clearConversation: () => void;
   loadAPIKeysFromFirebase: () => Promise<void>;
   saveAPIKeysToFirebase: () => Promise<boolean>;
   
@@ -69,6 +70,7 @@ export const useAIStore = create<AIStore>()(
           })),
         
         clearHistory: () => set({ conversationHistory: [] }),
+        clearConversation: () => set({ conversationHistory: [] }),
         
         hasValidProvider: (): boolean => {
           const state = get();

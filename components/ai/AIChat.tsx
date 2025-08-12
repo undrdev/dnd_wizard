@@ -1,25 +1,47 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { PaperAirplaneIcon, CogIcon, SparklesIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { 
+  PaperAirplaneIcon, 
+  CogIcon, 
+  SparklesIcon, 
+  ExclamationTriangleIcon,
+  TrashIcon,
+  DocumentDuplicateIcon,
+  MagnifyingGlassIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  PencilIcon,
+  XMarkIcon,
+  CheckIcon
+} from '@heroicons/react/24/outline';
 import { useAppStore } from '@/stores/useAppStore';
 import { useAIStore } from '@/stores/useAIStore';
 import { useAI } from '@/hooks/useAI';
 import { useToast } from '@/components/ui/Toast';
 import { PricingInfo } from '@/components/ui/PricingInfo';
 import { AIErrorDisplay } from '@/components/ui/AIErrorDisplay';
+import { AIGenerationFeedback } from '@/components/ui/AIGenerationFeedback';
 import { AISettingsModal } from './AISettingsModal';
 import { AIContentPreview } from './AIContentPreview';
 import { AIKeySetupDialog } from './AIKeySetupDialog';
-
+import type { AIMessage } from '@/types';
 
 export function AIChat() {
   const [message, setMessage] = useState('');
   const [showSettings, setShowSettings] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [editingMessageIndex, setEditingMessageIndex] = useState<number | null>(null);
+  const [editingContent, setEditingContent] = useState('');
+  const [inputHistory, setInputHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const hasLoadedKeys = useRef(false);
 
   const { getCurrentCampaignData } = useAppStore();
-  const { hasValidProvider, conversationHistory, currentProvider, loadAPIKeysFromFirebase, isLoadingKeys } = useAIStore();
+  const { hasValidProvider, conversationHistory, currentProvider, loadAPIKeysFromFirebase, isLoadingKeys, clearConversation } = useAIStore();
   const { addToast } = useToast();
   const {
     isGenerating,
@@ -36,6 +58,11 @@ export function AIChat() {
   } = useAI();
 
   const { campaign } = getCurrentCampaignData();
+
+  // Filter messages based on search query
+  const filteredMessages = conversationHistory.filter(msg => 
+    !searchQuery || msg.content.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     console.log('🔍 AIChat: Conversation history updated, length:', conversationHistory.length);
@@ -80,6 +107,49 @@ export function AIChat() {
     }
   }, [error, clearError, addToast]);
 
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + Enter to send message
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !isGenerating) {
+        e.preventDefault();
+        handleSubmit(e as any);
+      }
+      
+      // Escape to clear search or cancel editing
+      if (e.key === 'Escape') {
+        if (showSearch) {
+          setShowSearch(false);
+          setSearchQuery('');
+        }
+        if (editingMessageIndex !== null) {
+          setEditingMessageIndex(null);
+          setEditingContent('');
+        }
+      }
+      
+      // Up/Down arrows for input history
+      if (e.key === 'ArrowUp' && e.target === inputRef.current && inputHistory.length > 0) {
+        e.preventDefault();
+        if (historyIndex < inputHistory.length - 1) {
+          const newIndex = historyIndex + 1;
+          setHistoryIndex(newIndex);
+          setMessage(inputHistory[inputHistory.length - 1 - newIndex]);
+        }
+      }
+      
+      if (e.key === 'ArrowDown' && e.target === inputRef.current && historyIndex > 0) {
+        e.preventDefault();
+        const newIndex = historyIndex - 1;
+        setHistoryIndex(newIndex);
+        setMessage(newIndex === -1 ? '' : inputHistory[inputHistory.length - 1 - newIndex]);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isGenerating, showSearch, editingMessageIndex, inputHistory, historyIndex]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('🔍 AIChat: Form submitted');
@@ -94,6 +164,10 @@ export function AIChat() {
 
     const command = message.trim();
     console.log('🔍 AIChat: Processing command:', command);
+    
+    // Add to input history
+    setInputHistory(prev => [command, ...prev.slice(0, 9)]); // Keep last 10 commands
+    setHistoryIndex(-1);
     setMessage('');
 
     try {
@@ -113,14 +187,81 @@ export function AIChat() {
     }
   };
 
-
-
   const handleAcceptContent = async () => {
     try {
       await acceptPreviewContent();
     } catch (error) {
       console.error('Failed to accept content:', error);
     }
+  };
+
+  const handleEditMessage = (index: number, content: string) => {
+    setEditingMessageIndex(index);
+    setEditingContent(content);
+  };
+
+  const handleSaveEdit = async () => {
+    if (editingMessageIndex !== null && editingContent.trim()) {
+      // Update the message in conversation history
+      const updatedMessages = [...conversationHistory];
+      updatedMessages[editingMessageIndex] = {
+        ...updatedMessages[editingMessageIndex],
+        content: editingContent.trim(),
+        editedAt: new Date()
+      };
+      
+      // Here you would typically update the store
+      // For now, we'll just clear the editing state
+      setEditingMessageIndex(null);
+      setEditingContent('');
+      
+      addToast({
+        type: 'success',
+        title: 'Message Updated',
+        message: 'Your message has been updated.',
+        duration: 2000
+      });
+    }
+  };
+
+  const handleDeleteMessage = (index: number) => {
+    // Here you would typically remove the message from the store
+    addToast({
+      type: 'success',
+      title: 'Message Deleted',
+      message: 'Message has been removed from the conversation.',
+      duration: 2000
+    });
+  };
+
+  const handleCopyMessage = async (content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      addToast({
+        type: 'success',
+        title: 'Copied!',
+        message: 'Message copied to clipboard.',
+        duration: 2000
+      });
+    } catch (error) {
+      addToast({
+        type: 'error',
+        title: 'Copy Failed',
+        message: 'Failed to copy message to clipboard.',
+        duration: 3000
+      });
+    }
+  };
+
+  const handleClearConversation = () => {
+    clearConversation();
+    setShowClearConfirm(false);
+    addToast({
+      type: 'success',
+      title: 'Conversation Cleared',
+      message: 'All messages have been removed.',
+      duration: 2000
+    });
   };
 
   const quickActions = [
@@ -153,6 +294,7 @@ export function AIChat() {
   const handleQuickAction = (prompt: string) => {
     console.log('🔍 AIChat: Quick action selected:', prompt);
     setMessage(prompt);
+    inputRef.current?.focus();
   };
 
   if (isLoadingKeys) {
@@ -215,13 +357,70 @@ export function AIChat() {
           <SparklesIcon className="h-5 w-5 text-primary-500" />
           <h3 className="text-lg font-medium text-gray-900">AI Assistant</h3>
         </div>
-        <button
-          onClick={() => setShowSettings(true)}
-          className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-md"
-        >
-          <CogIcon className="h-5 w-5" />
-        </button>
+        <div className="flex items-center space-x-2">
+          {/* Search Button */}
+          <button
+            onClick={() => setShowSearch(!showSearch)}
+            className={`p-2 rounded-md transition-colors ${
+              showSearch 
+                ? 'bg-primary-100 text-primary-600' 
+                : 'text-gray-400 hover:text-gray-600'
+            }`}
+            title="Search messages"
+          >
+            <MagnifyingGlassIcon className="h-4 w-4" />
+          </button>
+          
+          {/* Clear Conversation Button */}
+          {conversationHistory.length > 0 && (
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              className="p-2 text-gray-400 hover:text-red-600 rounded-md transition-colors"
+              title="Clear conversation"
+            >
+              <TrashIcon className="h-4 w-4" />
+            </button>
+          )}
+          
+          {/* Settings Button */}
+          <button
+            onClick={() => setShowSettings(true)}
+            className="p-2 text-gray-400 hover:text-gray-600 rounded-md transition-colors"
+            title="AI Settings"
+          >
+            <CogIcon className="h-4 w-4" />
+          </button>
+        </div>
       </div>
+
+      {/* Search Bar */}
+      {showSearch && (
+        <div className="px-4 py-2 border-b bg-gray-50">
+          <div className="relative">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search messages..."
+              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <XMarkIcon className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          {searchQuery && (
+            <p className="text-xs text-gray-500 mt-1">
+              Found {filteredMessages.length} of {conversationHistory.length} messages
+            </p>
+          )}
+        </div>
+      )}
 
       {/* AI Error Display */}
       {aiError && (
@@ -275,46 +474,116 @@ export function AIChat() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {conversationHistory.length === 0 ? (
+        {filteredMessages.length === 0 ? (
           <div className="text-center py-8">
             <div className="mb-4">
               <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-2">
                 <span className="text-2xl">🤖</span>
               </div>
               <p className="text-gray-600">
-                Hi! I&apos;m your AI campaign assistant. Ask me to create NPCs, quests, locations, or anything else for your campaign!
+                {searchQuery 
+                  ? 'No messages found matching your search.'
+                  : 'Hi! I\'m your AI campaign assistant. Ask me to create NPCs, quests, locations, or anything else for your campaign!'
+                }
               </p>
             </div>
             
-            {/* Quick Actions */}
-            <div className="grid grid-cols-2 gap-2 mt-6">
-              {quickActions.map((action, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleQuickAction(action.prompt)}
-                  className="p-2 text-xs bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-                >
-                  {action.label}
-                </button>
-              ))}
-            </div>
+            {!searchQuery && (
+              /* Quick Actions */
+              <div className="grid grid-cols-2 gap-2 mt-6">
+                {quickActions.map((action, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleQuickAction(action.prompt)}
+                    className="p-2 text-xs bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
-          conversationHistory.map((msg, index) => (
+          filteredMessages.map((msg, index) => (
             <div
               key={index}
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[80%] p-3 rounded-lg ${
+                className={`max-w-[80%] p-3 rounded-lg relative group ${
                   msg.role === 'user'
                     ? 'bg-primary-600 text-white'
                     : 'bg-gray-100 text-gray-900'
                 }`}
               >
-                <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                {/* Message Actions */}
+                <div className={`absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity ${
+                  msg.role === 'user' ? 'text-white' : 'text-gray-500'
+                }`}>
+                  <div className="flex space-x-1">
+                    {msg.role === 'user' && (
+                      <button
+                        onClick={() => handleEditMessage(index, msg.content)}
+                        className="p-1 hover:bg-black/10 rounded"
+                        title="Edit message"
+                      >
+                        <PencilIcon className="h-3 w-3" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleCopyMessage(msg.content)}
+                      className="p-1 hover:bg-black/10 rounded"
+                      title="Copy message"
+                    >
+                      <DocumentDuplicateIcon className="h-3 w-3" />
+                    </button>
+                    {msg.role === 'user' && (
+                      <button
+                        onClick={() => handleDeleteMessage(index)}
+                        className="p-1 hover:bg-black/10 rounded"
+                        title="Delete message"
+                      >
+                        <TrashIcon className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Message Content */}
+                {editingMessageIndex === index ? (
+                  <div className="space-y-2">
+                    <textarea
+                      value={editingContent}
+                      onChange={(e) => setEditingContent(e.target.value)}
+                      className="w-full p-2 text-sm border rounded-md text-gray-900"
+                      rows={3}
+                      autoFocus
+                    />
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={handleSaveEdit}
+                        className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+                      >
+                        <CheckIcon className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingMessageIndex(null);
+                          setEditingContent('');
+                        }}
+                        className="px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700"
+                      >
+                        <XMarkIcon className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                )}
+                
                 <p className="text-xs opacity-70 mt-1">
-                  {msg.timestamp.toLocaleTimeString()}
+                  {msg.timestamp.toLocaleString()}
+                  {msg.editedAt && ' (edited)'}
                 </p>
               </div>
             </div>
@@ -337,31 +606,73 @@ export function AIChat() {
 
       {/* Input */}
       <div className="border-t p-4">
-        <form onSubmit={handleSubmit} className="flex space-x-2">
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Ask me to create something for your campaign..."
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
-            disabled={isGenerating}
-          />
-          <button
-            type="submit"
-            disabled={!message.trim() || isGenerating}
-            className="px-3 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <PaperAirplaneIcon className="h-4 w-4" />
-          </button>
+        <form onSubmit={handleSubmit} className="space-y-2">
+          <div className="flex space-x-2">
+            <textarea
+              ref={inputRef}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Ask me to create something for your campaign... (Ctrl+Enter to send)"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm resize-none"
+              rows={1}
+              disabled={isGenerating}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e as any);
+                }
+              }}
+            />
+            <button
+              type="submit"
+              disabled={!message.trim() || isGenerating}
+              className="px-3 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <PaperAirplaneIcon className="h-4 w-4" />
+            </button>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <p className="text-xs text-gray-500">
+                Using {currentProvider?.toUpperCase()} • {campaign ? `Campaign: ${campaign.title}` : 'No campaign selected'}
+              </p>
+              {inputHistory.length > 0 && (
+                <p className="text-xs text-gray-500">
+                  ↑↓ to navigate history • Esc to clear
+                </p>
+              )}
+            </div>
+            <PricingInfo variant="compact" />
+          </div>
         </form>
-        
-        <div className="mt-2 space-y-1">
-          <p className="text-xs text-gray-500">
-            Using {currentProvider?.toUpperCase()} • {campaign ? `Campaign: ${campaign.title}` : 'No campaign selected'}
-          </p>
-          <PricingInfo variant="compact" />
-        </div>
       </div>
+
+      {/* Clear Conversation Confirmation */}
+      {showClearConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm mx-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Clear Conversation?</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              This will permanently delete all messages in this conversation. This action cannot be undone.
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={handleClearConversation}
+                className="flex-1 px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Clear All
+              </button>
+              <button
+                onClick={() => setShowClearConfirm(false)}
+                className="flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <AISettingsModal
         isOpen={showSettings}

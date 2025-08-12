@@ -1,5 +1,6 @@
 import React from 'react';
 import { CheckIcon, XMarkIcon, UserIcon, MapPinIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
+import { AIGenerationFeedback } from '@/components/ui/AIGenerationFeedback';
 import type { ParsedContent } from '@/lib/aiParsers';
 
 interface AIContentPreviewProps {
@@ -7,9 +8,10 @@ interface AIContentPreviewProps {
   onAccept: () => void;
   onReject: () => void;
   isLoading?: boolean;
+  logId?: string;
 }
 
-export function AIContentPreview({ content, onAccept, onReject, isLoading = false }: AIContentPreviewProps) {
+export function AIContentPreview({ content, onAccept, onReject, isLoading = false, logId }: AIContentPreviewProps) {
   const hasContent = (content.npcs?.length ?? 0) > 0 || (content.quests?.length ?? 0) > 0 || (content.locations?.length ?? 0) > 0;
   
   if (!hasContent) {
@@ -39,6 +41,13 @@ export function AIContentPreview({ content, onAccept, onReject, isLoading = fals
           </button>
         </div>
       </div>
+      
+      {/* User Feedback */}
+      {logId && (
+        <div className="mb-4">
+          <AIGenerationFeedback logId={logId} />
+        </div>
+      )}
       
       <div className="space-y-4">
         {/* NPCs Preview */}
