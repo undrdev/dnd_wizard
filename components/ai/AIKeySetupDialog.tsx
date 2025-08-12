@@ -165,6 +165,37 @@ export function AIKeySetupDialog({ isOpen, onClose, onSetupComplete }: AIKeySetu
                   </ul>
                 )}
               </div>
+
+              {/* Pricing Information */}
+              <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                <p className="text-sm text-green-800">
+                  <strong>Pricing Information:</strong>
+                </p>
+                <div className="text-sm text-green-700 mt-1 space-y-1">
+                  <p>• API usage is charged per token (word/piece of text)</p>
+                  <p>• Costs vary by model and provider</p>
+                  <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                    <a 
+                      href="https://platform.openai.com/docs/pricing" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline text-xs"
+                    >
+                      <span>🔗</span>
+                      <span className="ml-1">OpenAI Pricing</span>
+                    </a>
+                    <a 
+                      href="https://www.anthropic.com/pricing#api" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline text-xs"
+                    >
+                      <span>🔗</span>
+                      <span className="ml-1">Anthropic Pricing</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

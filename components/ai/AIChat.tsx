@@ -4,6 +4,7 @@ import { useAppStore } from '@/stores/useAppStore';
 import { useAIStore } from '@/stores/useAIStore';
 import { useAI } from '@/hooks/useAI';
 import { useToast } from '@/components/ui/Toast';
+import { PricingInfo } from '@/components/ui/PricingInfo';
 import { AISettingsModal } from './AISettingsModal';
 import { AIContentPreview } from './AIContentPreview';
 import { AIKeySetupDialog } from './AIKeySetupDialog';
@@ -341,9 +342,12 @@ export function AIChat() {
           </button>
         </form>
         
-        <p className="text-xs text-gray-500 mt-2">
-          Using {currentProvider?.toUpperCase()} • {campaign ? `Campaign: ${campaign.title}` : 'No campaign selected'}
-        </p>
+        <div className="mt-2 space-y-1">
+          <p className="text-xs text-gray-500">
+            Using {currentProvider?.toUpperCase()} • {campaign ? `Campaign: ${campaign.title}` : 'No campaign selected'}
+          </p>
+          <PricingInfo variant="compact" />
+        </div>
       </div>
 
       <AISettingsModal

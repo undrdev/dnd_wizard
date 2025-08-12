@@ -262,11 +262,33 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
                 <p><strong>Premium:</strong> Best quality, higher cost - Use for complex creative tasks</p>
                 <p><strong>Standard:</strong> Good balance of quality and cost - Recommended for most use cases</p>
                 <p><strong>Budget:</strong> Cost-effective, good for simple tasks and testing</p>
-                <p className="mt-2 text-xs text-gray-600">
-                  <strong>Cost Reference:</strong> Based on current pricing from 
-                  <a href="https://platform.openai.com/docs/pricing" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">OpenAI</a> and 
-                  <a href="https://www.anthropic.com/pricing#api" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">Anthropic</a>
-                </p>
+              </div>
+              
+              {/* Pricing Links */}
+              <div className="mt-3 pt-3 border-t border-green-200">
+                <h5 className="text-xs font-medium text-green-800 mb-2">Current Pricing Information</h5>
+                <div className="flex flex-col sm:flex-row gap-2 text-xs">
+                  <a 
+                    href="https://platform.openai.com/docs/pricing" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    <span>🔗</span>
+                    <span className="ml-1">OpenAI Pricing</span>
+                    <span className="ml-1 text-gray-500">(opens in new tab)</span>
+                  </a>
+                  <a 
+                    href="https://www.anthropic.com/pricing#api" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    <span>🔗</span>
+                    <span className="ml-1">Anthropic Pricing</span>
+                    <span className="ml-1 text-gray-500">(opens in new tab)</span>
+                  </a>
+                </div>
               </div>
             </div>
 

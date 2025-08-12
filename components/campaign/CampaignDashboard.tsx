@@ -4,6 +4,7 @@ import { CampaignService, LocationService, NPCService, QuestService } from '@/li
 import { CampaignSidebar } from './CampaignSidebar';
 import { ImportExportModal } from './ImportExportModal';
 import { LocationBrowser } from '@/components/location/LocationBrowser';
+import { PricingInfo } from '@/components/ui/PricingInfo';
 import { migrateLocations } from '@/lib/locationMigration';
 
 export function CampaignDashboard() {
@@ -118,6 +119,12 @@ export function CampaignDashboard() {
             <div className="flex items-center space-x-4">
               <CampaignActions />
             </div>
+          </div>
+          
+          {/* Pricing Info */}
+          <div className="mt-4">
+            <PricingInfo variant="compact" />
+          </div>
           </div>
         </div>
 
