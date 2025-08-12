@@ -39,7 +39,7 @@ export function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormProps) {
     try {
       await signUp(email, password, displayName || undefined);
       onSuccess?.();
-    } catch (error) {
+    } catch {
       // Error is handled by the auth hook
     } finally {
       setIsSubmitting(false);
@@ -50,7 +50,7 @@ export function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormProps) {
     try {
       await signInWithGoogle();
       onSuccess?.();
-    } catch (error) {
+    } catch {
       // Error is handled by the auth hook
     }
   };
@@ -59,7 +59,7 @@ export function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormProps) {
     try {
       await signInWithGithub();
       onSuccess?.();
-    } catch (error) {
+    } catch {
       // Error is handled by the auth hook
     }
   };

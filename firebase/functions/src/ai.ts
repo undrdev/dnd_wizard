@@ -10,7 +10,7 @@ if (getApps().length === 0) {
 const db = getFirestore();
 
 // Simple placeholder functions for AI parsing
-function parseCommand(command: string, context?: any) {
+function parseCommand(command: string, context?: unknown) {
   return {
     type: 'CREATE_NPC',
     parameters: { name: 'Generated NPC', role: 'Villager' },
@@ -273,7 +273,7 @@ async function generateWithAnthropicDirect(
 
 
 
-async function updateAIContext(campaignId: string, userMessage: string, aiResponse: any) {
+async function updateAIContext(campaignId: string, userMessage: string, aiResponse: unknown) {
   const contextRef = db.collection('aiContext').doc(campaignId);
   const contextDoc = await contextRef.get();
 

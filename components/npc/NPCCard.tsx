@@ -9,6 +9,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useAppStore } from '@/stores/useAppStore';
+import { useRelationshipStore } from '@/stores/useRelationshipStore';
 import type { EnhancedNPC, NPC, Location } from '@/types';
 import { getRelationshipTypeDisplay } from '@/lib/npcUtils';
 
@@ -32,11 +33,15 @@ export function NPCCard({
   className = '',
 }: NPCCardProps) {
   const { locations, npcs } = useAppStore();
+  const { getRelationshipsByNPC } = useRelationshipStore();
   const [showDetails, setShowDetails] = useState(false);
 
   const location = locations.find(loc => loc.id === npc.locationId);
-  // TODO: Implement relationship lookup with new relationship system
-  const relatedNPCs: NPC[] = [];
+  const relationships = getRelationshipsByNPC(npc.id);
+  const relatedNPCs = relationships.map(rel => {
+    const relatedId = rel.fromNpcId === npc.id ? rel.toNpcId : rel.fromNpcId;
+    return npcs.find(n => n.id === relatedId);
+  }).filter(Boolean) as NPC[];
 
   // Get relationship type icon
   const getRelationshipIcon = (type: string) => {
@@ -213,14 +218,29 @@ export function NPCCard({
         </div>
       </div>
 
-      {/* Relationships Preview - TODO: Implement with new relationship system */}
-      {npc.relationships && npc.relationships.length > 0 && (
+      {/* Relationships Preview */}
+      {relatedNPCs.length > 0 && (
         <div className="mb-4">
           <h4 className="text-sm font-medium text-gray-900 mb-2">Relationships</h4>
           <div className="flex flex-wrap gap-2">
-            <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
-              {npc.relationships.length} relationship{npc.relationships.length !== 1 ? 's' : ''}
-            </div>
+            {relatedNPCs.slice(0, 3).map((relatedNPC) => {
+              const relationship = relationships.find(rel => 
+                (rel.fromNpcId === npc.id && rel.toNpcId === relatedNPC.id) ||
+                (rel.fromNpcId === relatedNPC.id && rel.toNpcId === npc.id)
+              );
+              return (
+                <div key={relatedNPC.id} className="flex items-center space-x-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+                  <span>{getRelationshipIcon(relationship?.relationshipType || 'unknown')}</span>
+                  <span>{relatedNPC.name}</span>
+                  <span>({getRelationshipTypeDisplay(relationship?.relationshipType || 'unknown')})</span>
+                </div>
+              );
+            })}
+            {relatedNPCs.length > 3 && (
+              <div className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
+                +{relatedNPCs.length - 3} more
+              </div>
+            )}
           </div>
         </div>
       )}

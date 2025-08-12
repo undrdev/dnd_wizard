@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { PlusIcon, PencilIcon, TrashIcon, HeartIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, HeartIcon, XMarkIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { useRelationshipStore } from '@/stores/useRelationshipStore';
 import type { EnhancedNPC, NPCRelationship, RelationshipType } from '@/types';
 import {
   getRelationshipTypeDisplay,
@@ -46,9 +47,14 @@ export function NPCRelationships({
     updatedAt: new Date(),
   });
 
+  const { getRelationshipsByNPC } = useRelationshipStore();
+  
   // Available NPCs (excluding current NPC and already related NPCs)
-  // TODO: Update with new relationship system
-  const availableNPCs = allNPCs.filter(n => n.id !== npc.id);
+  const currentRelationships = getRelationshipsByNPC(npc.id);
+  const relatedNPCIds = currentRelationships.map(rel => 
+    rel.fromNpcId === npc.id ? rel.toNpcId : rel.fromNpcId
+  );
+  const availableNPCs = allNPCs.filter(n => n.id !== npc.id && !relatedNPCIds.includes(n.id));
 
   // Get relationship type icon
   const getRelationshipIcon = (type: RelationshipType) => {
@@ -152,15 +158,61 @@ export function NPCRelationships({
         )}
       </div>
 
-      {/* Existing Relationships - TODO: Implement with new relationship system */}
-      {npc.relationships && npc.relationships.length > 0 ? (
+      {/* Existing Relationships */}
+      {currentRelationships.length > 0 ? (
         <div className="space-y-3">
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-blue-800">
-              This NPC has {npc.relationships.length} relationship{npc.relationships.length !== 1 ? 's' : ''}.
-              Relationship details will be implemented with the new relationship system.
-            </p>
-          </div>
+          {currentRelationships.map((relationship) => {
+            const targetNPC = allNPCs.find(n => n.id === (relationship.fromNpcId === npc.id ? relationship.toNpcId : relationship.fromNpcId));
+            if (!targetNPC) return null;
+            
+            return (
+              <div key={relationship.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2">
+                      {getRelationshipIcon(relationship.relationshipType)}
+                      <span className="font-medium text-gray-900">{targetNPC.name}</span>
+                      <span className="text-sm text-gray-500">({targetNPC.role})</span>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {getRelationshipTypeDisplay(relationship.relationshipType)} - {getRelationshipStrengthDisplay(relationship.strength)}
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => {
+                        setEditingRelationship(relationship.id);
+                        setFormData({
+                          fromNpcId: npc.id,
+                          toNpcId: targetNPC.id,
+                          relationshipType: relationship.relationshipType,
+                          strength: relationship.strength,
+                          description: relationship.description,
+                          isPublic: relationship.isPublic,
+                          updatedAt: new Date(),
+                        });
+                        setShowAddForm(true);
+                      }}
+                      className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                      title="Edit Relationship"
+                    >
+                      <PencilIcon className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => onRemoveRelationship(relationship.id)}
+                      className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                      title="Remove Relationship"
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+                {relationship.description && (
+                  <p className="mt-2 text-sm text-gray-600">{relationship.description}</p>
+                )}
+              </div>
+            );
+          })}
         </div>
       ) : (
         <div className="text-center py-6 text-gray-500">

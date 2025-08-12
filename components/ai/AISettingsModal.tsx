@@ -36,7 +36,7 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
     setCurrentProvider(selectedProvider);
 
     // Update AI service config
-    const config: any = {};
+    const config: Record<string, { apiKey: string; model: string }> = {};
     if (openaiApiKey && openaiModel) {
       config.openai = { apiKey: openaiApiKey, model: openaiModel };
     }

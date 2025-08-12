@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/stores/useAppStore';
-import { CampaignService, LocationService, NPCService, QuestService } from '@/lib/firestore';
+import { LocationService, NPCService, QuestService } from '@/lib/firestore';
 import { CampaignSidebar } from './CampaignSidebar';
 import { ImportExportModal } from './ImportExportModal';
 import { LocationBrowser } from '@/components/location/LocationBrowser';
 import { PricingInfo } from '@/components/ui/PricingInfo';
 import { migrateLocations } from '@/lib/locationMigration';
 import { CloudArrowUpIcon, CloudArrowDownIcon } from '@heroicons/react/24/outline';
-import { useToast } from '@/components/ui/Toast';
+
 
 export function CampaignDashboard() {
   const {
@@ -18,19 +18,11 @@ export function CampaignDashboard() {
     setError,
     isLoading,
   } = useAppStore();
-  const { addToast } = useToast();
-  const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  useEffect(() => {
-    if (currentCampaign && user) {
-      loadCampaignDataFromFirestore();
-    }
-  }, [currentCampaign?.id, user?.uid]);
-
-  const loadCampaignDataFromFirestore = async () => {
+  const loadCampaignDataFromFirestore = useCallback(async () => {
     if (!currentCampaign || !user) return;
 
     setLoading(true);
@@ -56,58 +48,13 @@ export function CampaignDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentCampaign, user, setLoading, loadCampaignData, setError]);
 
-  const handleSaveToCloud = async () => {
-    if (!currentCampaign || !user) return;
-    
-    setIsSaving(true);
-    try {
-      // Save campaign data to Firebase
-      await loadCampaignDataFromFirestore();
-      addToast({
-        type: 'success',
-        title: 'Saved to Cloud',
-        message: 'Campaign data has been successfully saved to the cloud.',
-        duration: 3000
-      });
-    } catch (error) {
-      console.error('Error saving to cloud:', error);
-      addToast({
-        type: 'error',
-        title: 'Save Failed',
-        message: 'Failed to save campaign data to the cloud. Please try again.',
-        duration: 5000
-      });
-    } finally {
-      setIsSaving(false);
+  useEffect(() => {
+    if (currentCampaign && user) {
+      loadCampaignDataFromFirestore();
     }
-  };
-
-  const handleLoadFromCloud = async () => {
-    if (!currentCampaign || !user) return;
-    
-    setIsLoading(true);
-    try {
-      await loadCampaignDataFromFirestore();
-      addToast({
-        type: 'success',
-        title: 'Loaded from Cloud',
-        message: 'Campaign data has been successfully loaded from the cloud.',
-        duration: 3000
-      });
-    } catch (error) {
-      console.error('Error loading from cloud:', error);
-      addToast({
-        type: 'error',
-        title: 'Load Failed',
-        message: 'Failed to load campaign data from the cloud. Please try again.',
-        duration: 5000
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [currentCampaign, user, loadCampaignDataFromFirestore]);
 
   if (!currentCampaign) {
     return (
@@ -195,9 +142,8 @@ export function CampaignDashboard() {
 function CampaignActions() {
   const { currentCampaign } = useAppStore();
   const [showImportExportModal, setShowImportExportModal] = useState(false);
-  const { addToast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingCloud, setIsLoadingCloud] = useState(false);
 
   const handleSaveToCloud = async () => {
     if (!currentCampaign) return;
@@ -205,20 +151,9 @@ function CampaignActions() {
     setIsSaving(true);
     try {
       // This would trigger a save operation
-      addToast({
-        type: 'success',
-        title: 'Saved to Cloud',
-        message: 'Campaign data has been successfully saved to the cloud.',
-        duration: 3000
-      });
+      console.log('Save to cloud functionality not yet implemented');
     } catch (error) {
       console.error('Error saving to cloud:', error);
-      addToast({
-        type: 'error',
-        title: 'Save Failed',
-        message: 'Failed to save campaign data to the cloud. Please try again.',
-        duration: 5000
-      });
     } finally {
       setIsSaving(false);
     }
@@ -227,25 +162,14 @@ function CampaignActions() {
   const handleLoadFromCloud = async () => {
     if (!currentCampaign) return;
     
-    setIsLoading(true);
+    setIsLoadingCloud(true);
     try {
       // This would trigger a load operation
-      addToast({
-        type: 'success',
-        title: 'Loaded from Cloud',
-        message: 'Campaign data has been successfully loaded from the cloud.',
-        duration: 3000
-      });
+      console.log('Load from cloud functionality not yet implemented');
     } catch (error) {
       console.error('Error loading from cloud:', error);
-      addToast({
-        type: 'error',
-        title: 'Load Failed',
-        message: 'Failed to load campaign data from the cloud. Please try again.',
-        duration: 5000
-      });
     } finally {
-      setIsLoading(false);
+      setIsLoadingCloud(false);
     }
   };
 
@@ -254,11 +178,11 @@ function CampaignActions() {
       <div className="flex items-center space-x-2">
         <button
           onClick={handleLoadFromCloud}
-          disabled={isLoading}
+          disabled={isLoadingCloud}
           className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
         >
           <CloudArrowDownIcon className="w-4 h-4 mr-2" />
-          {isLoading ? 'Loading...' : 'Load from Cloud'}
+          {isLoadingCloud ? 'Loading...' : 'Load from Cloud'}
         </button>
 
         <button

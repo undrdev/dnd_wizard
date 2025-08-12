@@ -108,7 +108,7 @@ export function ImportExportModal({ isOpen, onClose }: ImportExportModalProps) {
           <div className="p-6">
             <Tab.Group selectedIndex={selectedTab} onChange={setSelectedTab}>
               <Tab.List className="flex space-x-1 rounded-xl bg-blue-900/20 p-1">
-                {tabs.map((tab, index) => (
+                {tabs.map((tab) => (
                   <Tab
                     key={tab.name}
                     className={({ selected }) =>

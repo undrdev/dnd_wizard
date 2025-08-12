@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PlusIcon, TrashIcon, PencilIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { useAppStore } from '@/stores/useAppStore';
 import { CampaignService } from '@/lib/firestore';
 import { FullCampaignGenerator } from './FullCampaignGenerator';
@@ -11,7 +11,7 @@ interface CampaignListProps {
 }
 
 export function CampaignList({ onCreateNew, onSelectCampaign }: CampaignListProps) {
-  const { campaigns, currentCampaign, user, deleteCampaign, setLoading, setError } = useAppStore();
+  const { campaigns, currentCampaign, user, deleteCampaign, setError } = useAppStore();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showFullGenerator, setShowFullGenerator] = useState(false);
 
@@ -32,15 +32,7 @@ export function CampaignList({ onCreateNew, onSelectCampaign }: CampaignListProp
     }
   };
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
-  };
+
 
   if (!user) {
     return (

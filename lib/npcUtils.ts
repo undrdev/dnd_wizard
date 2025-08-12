@@ -1,4 +1,5 @@
 import type { NPC, EnhancedNPC, NPCRelationship, RelationshipType } from '@/types';
+import { useRelationshipStore } from '@/stores/useRelationshipStore';
 
 // Default values for enhanced NPC fields
 export const createEnhancedNPCDefaults = (): Partial<EnhancedNPC> => ({
@@ -158,11 +159,16 @@ export const filterNPCsByCriteria = (
       }
     }
 
-    // TODO: Implement relationship type filtering when relationship store is available
-    // Currently relationships are stored as IDs only
+        // Filter by relationship type using relationship store
     if (criteria.relationshipType) {
-      // Skip filtering by relationship type for now
-      console.log('Relationship type filtering not yet implemented with new relationship system');
+      const { getRelationshipsByType } = useRelationshipStore.getState();
+      const hasRelationshipType = npc.relationships.some(relId => {
+        const relationships = getRelationshipsByType(npc.id, criteria.relationshipType!);
+        return relationships.some(rel => rel.id === relId);
+      });
+      if (!hasRelationshipType) {
+        return false;
+      }
     }
 
     return true;
@@ -251,13 +257,15 @@ export const createRelationship = (
 });
 
 // Get mutual relationships between two NPCs
-// TODO: Implement with relationship store when available
 export const getMutualRelationships = (
   npc1: EnhancedNPC,
   npc2: EnhancedNPC
 ): { npc1ToNpc2?: NPCRelationship; npc2ToNpc1?: NPCRelationship } => {
-  // Currently relationships are stored as IDs only
-  // This function will need to be implemented when we have a relationship store
-  console.log('getMutualRelationships not yet implemented with new relationship system');
-  return { npc1ToNpc2: undefined, npc2ToNpc1: undefined };
+  const { getRelationshipBetween } = useRelationshipStore.getState();
+  const relationships = getRelationshipBetween(npc1.id, npc2.id);
+  
+  const npc1ToNpc2 = relationships.find(rel => rel.fromNpcId === npc1.id && rel.toNpcId === npc2.id);
+  const npc2ToNpc1 = relationships.find(rel => rel.fromNpcId === npc2.id && rel.toNpcId === npc1.id);
+  
+  return { npc1ToNpc2, npc2ToNpc1 };
 };

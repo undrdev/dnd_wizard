@@ -153,7 +153,7 @@ export function AIKeySetupDialog({ isOpen, onClose, onSetupComplete }: AIKeySetu
                   <ul className="text-sm text-blue-700 mt-1 space-y-1">
                     <li>• Visit <a href="https://platform.openai.com/account/api-keys" target="_blank" rel="noopener noreferrer" className="underline">OpenAI Platform</a></li>
                     <li>• Sign in or create an account</li>
-                    <li>• Click "Create new secret key"</li>
+                    <li>• Click &quot;Create new secret key&quot;</li>
                     <li>• Copy the generated key</li>
                   </ul>
                 ) : (

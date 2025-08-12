@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { AISettingsModal } from '@/components/ai/AISettingsModal';
 
 export function UserMenu() {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const [showSettings, setShowSettings] = useState(false);
 
   if (!user) return null;
@@ -50,7 +50,7 @@ export function UserMenu() {
             <Menu.Item>
               {({ active }) => (
                 <button
-                  onClick={signOut}
+                  onClick={logout}
                   className={`${
                     active ? 'bg-gray-100' : ''
                   } flex items-center w-full px-4 py-2 text-sm text-gray-700`}

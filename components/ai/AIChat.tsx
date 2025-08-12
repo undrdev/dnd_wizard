@@ -8,13 +8,12 @@ import { PricingInfo } from '@/components/ui/PricingInfo';
 import { AISettingsModal } from './AISettingsModal';
 import { AIContentPreview } from './AIContentPreview';
 import { AIKeySetupDialog } from './AIKeySetupDialog';
-import type { AIMessage } from '@/types';
+
 
 export function AIChat() {
   const [message, setMessage] = useState('');
   const [showSettings, setShowSettings] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasLoadedKeys = useRef(false);
 
@@ -29,7 +28,6 @@ export function AIChat() {
     processCommand,
     acceptPreviewContent,
     rejectPreviewContent,
-    generateSuggestions,
     clearError,
     onKeySetupComplete
   } = useAI();
@@ -52,7 +50,7 @@ export function AIChat() {
       hasLoadedKeys.current = true;
       loadAPIKeysFromFirebase();
     }
-  }, [loadAPIKeysFromFirebase]);
+  }, [loadAPIKeysFromFirebase, isLoadingKeys]);
 
   useEffect(() => {
     if (error) {
@@ -112,17 +110,7 @@ export function AIChat() {
     }
   };
 
-  const handleSuggestionClick = async (type: 'npc' | 'quest' | 'location' | 'general') => {
-    if (isGenerating) return;
 
-    try {
-      setShowSuggestions(true);
-      const newSuggestions = await generateSuggestions(type);
-      setSuggestions(newSuggestions);
-    } catch (error) {
-      console.error('Failed to generate suggestions:', error);
-    }
-  };
 
   const handleAcceptContent = async () => {
     try {
@@ -269,7 +257,7 @@ export function AIChat() {
                 <span className="text-2xl">🤖</span>
               </div>
               <p className="text-gray-600">
-                Hi! I'm your AI campaign assistant. Ask me to create NPCs, quests, locations, or anything else for your campaign!
+                Hi! I&apos;m your AI campaign assistant. Ask me to create NPCs, quests, locations, or anything else for your campaign!
               </p>
             </div>
             

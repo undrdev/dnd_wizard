@@ -15,7 +15,7 @@ interface CreateCampaignModalProps {
 }
 
 export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampaignModalProps) {
-  const { user, addCampaign, setCurrentCampaign, setLoading, setError } = useAppStore();
+  const { user, addCampaign, setCurrentCampaign, setError } = useAppStore();
   const { providers, currentProvider } = useAIStore();
   const { addToast } = useToast();
   
@@ -28,7 +28,7 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+
 
   const handleInputChange = (field: keyof CampaignFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -48,24 +48,16 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
     setIsGenerating(true);
     try {
       const prompt = `Generate a D&D campaign with the following specifications:
-        - Genre: ${formData.genre}
-        - Setting: ${formData.setting || 'Any'}
-        - Theme: ${formData.theme || 'Any'}
-        - Tone: ${formData.tone}
-        - Complexity: ${formData.complexity}
+        - Concept: ${formData.concept || 'Any fantasy setting'}
         
         Please provide:
         1. A compelling campaign title
         2. A detailed campaign description
-        3. A rich setting description
-        4. A central theme for the campaign
         
         Format the response as JSON with the following structure:
         {
           "title": "Campaign Title",
-          "description": "Campaign description...",
-          "setting": "Setting description...",
-          "theme": "Central theme..."
+          "description": "Campaign description..."
         }`;
 
       const response = await fetch('https://us-central1-dnd-wizard-app.cloudfunctions.net/generateContentFunction', {
@@ -98,8 +90,6 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
             ...prev,
             title: generatedContent.title || prev.title,
             description: generatedContent.description || prev.description,
-            setting: generatedContent.setting || prev.setting,
-            theme: generatedContent.theme || prev.theme,
           }));
 
           addToast({

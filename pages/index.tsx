@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuthContext } from '@/components/auth/AuthProvider';
 import { useAppStore } from '@/stores/useAppStore';
 import { CampaignService } from '@/lib/firestore';
@@ -11,11 +11,10 @@ import type { Campaign } from '@/types';
 export default function HomePage() {
   const { user, loading: authLoading } = useAuthContext();
   const { 
-    campaigns, 
     currentCampaign, 
+    isLoading,
     setCampaigns, 
     setCurrentCampaign,
-    isLoading,
     setLoading,
     setError 
   } = useAppStore();
@@ -23,14 +22,7 @@ export default function HomePage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
 
-  useEffect(() => {
-    if (user && initialLoad) {
-      loadUserCampaigns();
-      setInitialLoad(false);
-    }
-  }, [user, initialLoad]);
-
-  const loadUserCampaigns = async () => {
+  const loadUserCampaigns = useCallback(async () => {
     if (!user) return;
 
     setLoading(true);
@@ -48,7 +40,14 @@ export default function HomePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, currentCampaign, setCampaigns, setCurrentCampaign, setLoading, setError]);
+
+  useEffect(() => {
+    if (user && initialLoad) {
+      loadUserCampaigns();
+      setInitialLoad(false);
+    }
+  }, [user, initialLoad, loadUserCampaigns]);
 
   const handleSelectCampaign = (campaign: Campaign) => {
     setCurrentCampaign(campaign);

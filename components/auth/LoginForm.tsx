@@ -21,7 +21,7 @@ export function LoginForm({ onSuccess, onSwitchToSignUp }: LoginFormProps) {
     try {
       await signIn(email, password);
       onSuccess?.();
-    } catch (error) {
+    } catch {
       // Error is handled by the auth hook
     } finally {
       setIsSubmitting(false);
@@ -32,7 +32,7 @@ export function LoginForm({ onSuccess, onSwitchToSignUp }: LoginFormProps) {
     try {
       await signInWithGoogle();
       onSuccess?.();
-    } catch (error) {
+    } catch {
       // Error is handled by the auth hook
     }
   };
@@ -41,7 +41,7 @@ export function LoginForm({ onSuccess, onSwitchToSignUp }: LoginFormProps) {
     try {
       await signInWithGithub();
       onSuccess?.();
-    } catch (error) {
+    } catch {
       // Error is handled by the auth hook
     }
   };
@@ -156,7 +156,7 @@ export function LoginForm({ onSuccess, onSwitchToSignUp }: LoginFormProps) {
         {onSwitchToSignUp && (
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <button
                 onClick={onSwitchToSignUp}
                 className="font-medium text-primary-600 hover:text-primary-500"

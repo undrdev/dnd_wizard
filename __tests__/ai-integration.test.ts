@@ -22,6 +22,65 @@ describe('AI Integration - Agent 5', () => {
         description: 'A large port city',
         npcs: [],
         quests: [],
+        subLocations: [],
+        hierarchyLevel: 0,
+        images: [],
+        detailedDescription: 'A large port city',
+        geography: {
+          terrain: 'urban',
+          topography: 'coastal',
+          naturalFeatures: ['harbor'],
+          climateZone: 'temperate',
+          flora: [],
+          fauna: [],
+          naturalResources: [],
+          weatherPatterns: 'moderate',
+          naturalDisasters: []
+        },
+        architecture: {
+          buildingStyles: ['stone'],
+          materials: ['stone', 'wood'],
+          cityLayout: 'grid',
+          fortifications: 'walls',
+          notableBuildings: []
+        },
+        politics: {
+          governmentType: 'council',
+          rulers: [],
+          laws: [],
+          conflicts: [],
+          alliances: [],
+          politicalStatus: 'stable'
+        },
+        economy: {
+          tradeGoods: [],
+          currency: 'gold',
+          markets: [],
+          guilds: [],
+          industries: [],
+          economicStatus: 'prosperous'
+        },
+        culture: {
+          demographics: [],
+          languages: ['common'],
+          customs: [],
+          festivals: [],
+          religions: [],
+          socialStructure: 'hierarchical'
+        },
+        climate: {
+          temperatureRange: 'moderate',
+          seasons: ['spring', 'summer', 'fall', 'winter'],
+          precipitation: 'moderate',
+          weatherEvents: []
+        },
+        history: '',
+        legends: [],
+        rumors: [],
+        secrets: [],
+        notableFeatures: [],
+        magicalProperties: [],
+        size: 'large'
       },
     ],
     npcs: [
@@ -34,6 +93,7 @@ describe('AI Integration - Agent 5', () => {
         personality: 'Wise and mysterious',
         stats: { level: 20 },
         quests: [],
+        relationships: [],
       },
     ],
     quests: [

@@ -16,7 +16,7 @@ export function CampaignSidebar({ onClose }: CampaignSidebarProps) {
   const [activeTab, setActiveTab] = useState<SidebarTab>('ai');
   const { getCurrentCampaignData } = useAppStore();
   
-  const { campaign, locations, npcs, quests } = getCurrentCampaignData();
+  const { locations, npcs, quests } = getCurrentCampaignData();
 
   const tabs = [
     { id: 'ai' as const, name: 'AI Assistant', icon: ChatBubbleLeftIcon },

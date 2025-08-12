@@ -28,15 +28,65 @@ const mockEnhancedLocation: EnhancedLocation = {
   ...mockLocation,
   parentLocationId: undefined,
   subLocations: [],
+  hierarchyLevel: 0,
   images: [],
   detailedDescription: 'A detailed description',
+  geography: {
+    terrain: 'urban',
+    topography: 'coastal',
+    naturalFeatures: ['harbor'],
+    climateZone: 'temperate',
+    flora: [],
+    fauna: [],
+    naturalResources: [],
+    weatherPatterns: 'moderate',
+    naturalDisasters: []
+  },
+  architecture: {
+    buildingStyles: ['stone'],
+    materials: ['stone', 'wood'],
+    cityLayout: 'grid',
+    fortifications: 'walls',
+    notableBuildings: []
+  },
+  politics: {
+    governmentType: 'council',
+    rulers: [],
+    laws: [],
+    conflicts: [],
+    alliances: [],
+    politicalStatus: 'stable'
+  },
+  economy: {
+    tradeGoods: [],
+    currency: 'gold',
+    markets: [],
+    guilds: [],
+    industries: [],
+    economicStatus: 'prosperous'
+  },
+  culture: {
+    demographics: [],
+    languages: ['common'],
+    customs: [],
+    festivals: [],
+    religions: [],
+    socialStructure: 'hierarchical'
+  },
+  climate: {
+    temperatureRange: 'moderate',
+    seasons: ['spring', 'summer', 'fall', 'winter'],
+    precipitation: 'moderate',
+    weatherEvents: []
+  },
   history: 'Ancient history',
+  legends: [],
   rumors: ['Rumor 1', 'Rumor 2'],
   secrets: ['Secret 1'],
-  climate: 'Temperate',
+  notableFeatures: [],
+  magicalProperties: [],
   population: 100000,
-  government: 'Democracy',
-  economy: 'Trade',
+  size: 'large',
   createdAt: new Date('2023-01-01'),
   updatedAt: new Date('2023-01-02'),
 };

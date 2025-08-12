@@ -13,6 +13,7 @@ import {
   type NPCFilterCriteria,
   type NPCSortBy,
 } from '@/lib/npcUtils';
+import { useRelationshipStore } from '@/stores/useRelationshipStore';
 
 export interface UseNPCsReturn {
   // Data
@@ -65,6 +66,12 @@ export function useNPCs(): UseNPCsReturn {
     setLoading,
     setError,
   } = useAppStore();
+
+  const {
+    addRelationship: addRelationshipToStore,
+    updateRelationship: updateRelationshipInStore,
+    removeRelationship: removeRelationshipFromStore,
+  } = useRelationshipStore();
 
   // Local state for search and filtering
   const [searchTerm, setSearchTerm] = useState('');
@@ -227,22 +234,29 @@ export function useNPCs(): UseNPCsReturn {
       npcId
     );
 
-    // TODO: Store relationship in a separate relationships store
-    // For now, just store the relationship ID in the NPC's relationships array
+    // Store relationship in the relationship store
+    addRelationshipToStore(relationship);
+    
+    // Also store the relationship ID in the NPC's relationships array for backward compatibility
     const updatedRelationships = [...(npc.relationships || []), relationship.id];
     return updateNPC(npcId, { relationships: updatedRelationships });
   }, [npcs, updateNPC, setError]);
 
-  // Update relationship - TODO: Implement with relationship store
+  // Update relationship
   const updateRelationship = useCallback(async (
     npcId: string,
     relationshipId: string,
     data: Partial<NPCRelationship>
   ): Promise<boolean> => {
-    // TODO: Update relationship in separate relationship store
-    console.log('Update relationship not yet implemented with new relationship system');
-    return false;
-  }, []);
+    try {
+      updateRelationshipInStore(relationshipId, data);
+      return true;
+    } catch (error) {
+      console.error('Error updating relationship:', error);
+      setError('Failed to update relationship');
+      return false;
+    }
+  }, [updateRelationshipInStore, setError]);
 
   // Remove relationship
   const removeRelationship = useCallback(async (
@@ -255,10 +269,19 @@ export function useNPCs(): UseNPCsReturn {
       return false;
     }
 
-    // Remove relationship ID from NPC's relationships array
-    const updatedRelationships = (npc.relationships || []).filter(id => id !== relationshipId);
-    return updateNPC(npcId, { relationships: updatedRelationships });
-  }, [npcs, updateNPC, setError]);
+    try {
+      // Remove from relationship store
+      removeRelationshipFromStore(relationshipId);
+      
+      // Remove relationship ID from NPC's relationships array
+      const updatedRelationships = (npc.relationships || []).filter(id => id !== relationshipId);
+      return updateNPC(npcId, { relationships: updatedRelationships });
+    } catch (error) {
+      console.error('Error removing relationship:', error);
+      setError('Failed to remove relationship');
+      return false;
+    }
+  }, [npcs, updateNPC, setError, removeRelationshipFromStore]);
 
   // Get NPCs by location
   const getNPCsByLocation = useCallback((locationId: string): EnhancedNPC[] => {
@@ -270,10 +293,12 @@ export function useNPCs(): UseNPCsReturn {
     const npc = npcs.find(n => n.id === npcId);
     if (!npc) return [];
 
-    // TODO: Update with new relationship system - relationships are now just IDs
-    // const relatedIds = npc.relationships.map(rel => rel.toNpcId);
-    // return npcs.filter(n => relatedIds.includes(n.id));
-    return []; // Temporary until relationship system is fully implemented
+    const { getRelationshipsByNPC } = useRelationshipStore.getState();
+    const relationships = getRelationshipsByNPC(npcId);
+    const relatedIds = relationships.map(rel => 
+      rel.fromNpcId === npcId ? rel.toNpcId : rel.fromNpcId
+    );
+    return npcs.filter(n => relatedIds.includes(n.id));
   }, [npcs]);
 
   // Clear all filters

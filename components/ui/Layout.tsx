@@ -72,7 +72,7 @@ export function Layout({ children }: LayoutProps) {
                 </button>
 
                 {user ? (
-                  <UserMenu user={user} />
+                  <UserMenu />
                 ) : (
                   <button
                     onClick={() => {

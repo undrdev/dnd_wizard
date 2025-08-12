@@ -4,7 +4,7 @@ import type { Campaign, EnhancedLocation, NPC, Quest } from '@/types';
 export interface AICommand {
   type: 'CREATE_NPC' | 'CREATE_QUEST' | 'CREATE_LOCATION' | 'MODIFY' | 'SUGGEST' | 'UNKNOWN';
   target?: string; // ID of target entity
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
   confidence: number; // 0-1 confidence score
   originalText: string;
 }
@@ -154,9 +154,9 @@ function extractParameters(
   text: string, 
   commandType: AICommand['type'], 
   context?: CampaignContext
-): Record<string, any> {
+): Record<string, unknown> {
   try {
-    const parameters: Record<string, any> = {};
+    const parameters: Record<string, unknown> = {};
     
     // Extract common entities
     for (const [key, pattern] of Object.entries(ENTITY_PATTERNS)) {
@@ -197,16 +197,17 @@ function extractParameters(
  */
 function extractNPCParameters(
   text: string, 
-  baseParams: Record<string, any>, 
+  baseParams: Record<string, unknown>, 
   context?: CampaignContext
-): Record<string, any> {
+): Record<string, unknown> {
   const params = { ...baseParams };
   
   // Try to match with existing locations
-  if (params.location && context?.locations) {
+  if (params.location && typeof params.location === 'string' && context?.locations) {
+    const locationStr = params.location;
     const matchedLocation = context.locations.find(loc => 
-      loc.name.toLowerCase().includes(params.location.toLowerCase()) ||
-      params.location.toLowerCase().includes(loc.name.toLowerCase())
+      loc.name.toLowerCase().includes(locationStr.toLowerCase()) ||
+      locationStr.toLowerCase().includes(loc.name.toLowerCase())
     );
     if (matchedLocation) {
       params.locationId = matchedLocation.id;
@@ -227,9 +228,9 @@ function extractNPCParameters(
  */
 function extractQuestParameters(
   text: string,
-  baseParams: Record<string, any>,
+  baseParams: Record<string, unknown>,
   context?: CampaignContext
-): Record<string, any> {
+): Record<string, unknown> {
   const params = { ...baseParams };
 
   // Extract quest title - try multiple patterns
@@ -269,10 +270,10 @@ function extractQuestParameters(
  * Extract Location-specific parameters
  */
 function extractLocationParameters(
-  text: string, 
-  baseParams: Record<string, any>, 
+  text: string,
+  baseParams: Record<string, unknown>,
   context?: CampaignContext
-): Record<string, any> {
+): Record<string, unknown> {
   const params = { ...baseParams };
   
   // Extract coordinates if mentioned
@@ -291,10 +292,10 @@ function extractLocationParameters(
  * Extract modification parameters
  */
 function extractModifyParameters(
-  text: string, 
-  baseParams: Record<string, any>, 
+  text: string,
+  baseParams: Record<string, unknown>,
   context?: CampaignContext
-): Record<string, any> {
+): Record<string, unknown> {
   const params = { ...baseParams };
   
   // Try to identify target entity
@@ -335,9 +336,9 @@ function extractModifyParameters(
  */
 function extractSuggestParameters(
   text: string,
-  baseParams: Record<string, any>,
+  baseParams: Record<string, unknown>,
   context?: CampaignContext
-): Record<string, any> {
+): Record<string, unknown> {
   const params = { ...baseParams };
 
   // Determine what type of suggestions are needed - check for specific mentions first
@@ -360,7 +361,7 @@ function extractSuggestParameters(
 function calculateConfidence(
   text: string, 
   commandType: AICommand['type'], 
-  parameters: Record<string, any>
+  parameters: Record<string, unknown>
 ): number {
   let confidence = 0;
   
