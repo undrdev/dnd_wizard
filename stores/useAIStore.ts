@@ -85,36 +85,66 @@ export const useAIStore = create<AIStore>()(
           return provider ? state.providers[provider] : null;
         },
         
-        loadAPIKeysFromFirebase: async () => {
-          set({ isLoadingKeys: true });
-          try {
-            const keys = await apiKeyStorage.loadAPIKeys();
-            if (keys) {
-              const providers: AIProviderConfig = {};
-              if (keys.openai) {
-                providers.openai = keys.openai;
-              }
-              if (keys.anthropic) {
-                providers.anthropic = keys.anthropic;
-              }
-              set({ providers, isLoadingKeys: false });
-            }
-          } catch (error) {
-            console.error('Error loading API keys:', error);
-            set({ isLoadingKeys: false });
-          }
-        },
+          loadAPIKeysFromFirebase: async () => {
+    console.log('🔍 AI Store: Loading API keys from Firebase');
+    set({ isLoadingKeys: true });
+    try {
+      // Add a timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Loading timeout')), 10000)
+      );
+      
+      const keysPromise = apiKeyStorage.loadAPIKeys();
+      const keys = await Promise.race([keysPromise, timeoutPromise]) as any;
+      
+      console.log('🔍 AI Store: Keys loaded from Firebase:', keys ? 'Found' : 'Not found');
+      
+      if (keys) {
+        const providers: AIProviderConfig = {};
+        if (keys.openai) {
+          console.log('🔍 AI Store: Found OpenAI keys');
+          // Type-safe conversion for OpenAI models
+          const openaiModel = keys.openai.model as 'gpt-4' | 'gpt-4-turbo' | 'gpt-3.5-turbo';
+          providers.openai = {
+            apiKey: keys.openai.apiKey,
+            model: openaiModel
+          };
+        }
+        if (keys.anthropic) {
+          console.log('🔍 AI Store: Found Anthropic keys');
+          // Type-safe conversion for Anthropic models
+          const anthropicModel = keys.anthropic.model as 'claude-3-opus' | 'claude-3-sonnet' | 'claude-3-haiku';
+          providers.anthropic = {
+            apiKey: keys.anthropic.apiKey,
+            model: anthropicModel
+          };
+        }
+        console.log('🔍 AI Store: Setting providers:', Object.keys(providers));
+        set({ providers, isLoadingKeys: false });
+      } else {
+        // No keys found, but still need to set loading to false
+        console.log('🔍 AI Store: No API keys found in Firebase');
+        set({ isLoadingKeys: false });
+      }
+    } catch (error) {
+      console.error('❌ AI Store: Error loading API keys:', error);
+      set({ isLoadingKeys: false });
+    }
+  },
         
-        saveAPIKeysToFirebase: async () => {
-          const state = get();
-          try {
-            const success = await apiKeyStorage.saveAPIKeys(state.providers);
-            return success;
-          } catch (error) {
-            console.error('Error saving API keys:', error);
-            return false;
-          }
-        },
+          saveAPIKeysToFirebase: async () => {
+    const state = get();
+    console.log('🔍 AI Store: Saving API keys to Firebase');
+    console.log('🔍 AI Store: Providers to save:', Object.keys(state.providers));
+    try {
+      const success = await apiKeyStorage.saveAPIKeys(state.providers);
+      console.log('🔍 AI Store: Save result:', success);
+      return success;
+    } catch (error) {
+      console.error('❌ AI Store: Error saving API keys:', error);
+      return false;
+    }
+  },
       }),
       {
         name: 'dnd-wizard-ai-store',

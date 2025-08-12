@@ -4,6 +4,7 @@ import { useAppStore } from '@/stores/useAppStore';
 import { AIChat } from '@/components/ai/AIChat';
 import { QuestList } from '@/components/quest/QuestList';
 import { NPCList } from '@/components/npc/NPCList';
+import { LocationList } from '@/components/location/LocationList';
 
 interface CampaignSidebarProps {
   onClose: () => void;
@@ -67,68 +68,7 @@ export function CampaignSidebar({ onClose }: CampaignSidebarProps) {
         {activeTab === 'ai' && <AIChat />}
         {activeTab === 'npcs' && <NPCList className="h-full overflow-y-auto p-4" />}
         {activeTab === 'quests' && <QuestList compact />}
-        {activeTab === 'locations' && <LocationList locations={locations} />}
-      </div>
-    </div>
-  );
-}
-
-
-
-
-
-// Location List Component
-function LocationList({ locations }: { locations: any[] }) {
-  const { selectLocation, getSelectedLocation } = useAppStore();
-  const selectedLocation = getSelectedLocation();
-
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'city': return '🏰';
-      case 'village': return '🏘️';
-      case 'landmark': return '🗿';
-      case 'dungeon': return '🕳️';
-      default: return '📍';
-    }
-  };
-
-  return (
-    <div className="h-full overflow-y-auto p-4">
-      <div className="space-y-3">
-        {locations.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <MapIcon className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-            <p>No locations yet</p>
-            <p className="text-sm">Use the AI assistant to create some!</p>
-          </div>
-        ) : (
-          locations.map((location) => (
-            <div
-              key={location.id}
-              onClick={() => selectLocation(location.id)}
-              className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                selectedLocation?.id === location.id
-                  ? 'border-primary-500 bg-primary-50'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              <div className="flex items-start">
-                <span className="text-lg mr-3">{getTypeIcon(location.type)}</span>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium text-gray-900 truncate">
-                    {location.name}
-                  </h4>
-                  <p className="text-xs text-gray-500 capitalize">{location.type}</p>
-                  {location.description && (
-                    <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                      {location.description}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))
-        )}
+        {activeTab === 'locations' && <LocationList />}
       </div>
     </div>
   );

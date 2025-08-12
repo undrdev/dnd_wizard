@@ -24,25 +24,31 @@ export interface ParsedContent {
   followUpQuestions?: string[];
 }
 
-// Command patterns for natural language parsing
+// Command patterns for natural language parsing - more flexible and robust
 const COMMAND_PATTERNS = {
   CREATE_NPC: [
     /create\s+(?:an?\s+)?npc/i,
     /(?:make|generate|add)\s+(?:an?\s+)?(?:new\s+)?(?:character|npc)/i,
     /(?:i\s+)?(?:want|need)\s+(?:an?\s+)?(?:new\s+)?(?:character|npc)/i,
     /(?:character|npc)\s+(?:named|called)/i,
+    /npc\s+(?:creation|generation)/i,
   ],
   CREATE_QUEST: [
     /create\s+(?:a\s+)?.*?quest/i,
     /(?:make|generate|add)\s+(?:a\s+)?(?:new\s+)?.*?quest/i,
     /(?:i\s+)?(?:want|need)\s+(?:a\s+)?(?:new\s+)?.*?quest/i,
     /quest\s+(?:about|involving|for|called|named)/i,
+    /quest\s+(?:creation|generation)/i,
   ],
   CREATE_LOCATION: [
     /create\s+(?:a\s+)?location/i,
     /(?:make|generate|add)\s+(?:a\s+)?(?:new\s+)?(?:location|place)/i,
     /(?:i\s+)?(?:want|need)\s+(?:a\s+)?(?:new\s+)?(?:location|place)/i,
     /(?:location|place)\s+(?:called|named)/i,
+    /location\s+(?:creation|generation)/i,
+    /place\s+(?:creation|generation)/i,
+    /add\s+(?:a\s+)?(?:new\s+)?(?:location|place)/i,
+    /generate\s+(?:a\s+)?(?:new\s+)?(?:location|place)/i,
   ],
   MODIFY: [
     /(?:update|modify|change|edit)\s+/i,
@@ -72,25 +78,34 @@ const ENTITY_PATTERNS = {
  */
 export function parseCommand(text: string, context?: CampaignContext): AICommand {
   try {
+    console.log('Parsing command:', text);
     const normalizedText = text.trim().toLowerCase();
+    console.log('Normalized text:', normalizedText);
     
     // Determine command type
     const commandType = determineCommandType(normalizedText);
+    console.log('Command type:', commandType);
     
     // Extract parameters based on command type
     const parameters = extractParameters(text, commandType, context);
+    console.log('Extracted parameters:', parameters);
     
     // Calculate confidence score
     const confidence = calculateConfidence(normalizedText, commandType, parameters);
+    console.log('Confidence:', confidence);
     
-    return {
+    const result = {
       type: commandType,
       parameters,
       confidence,
       originalText: text,
     };
+    
+    console.log('Final parsed command:', result);
+    return result;
   } catch (error) {
-    console.warn('Error parsing command:', error);
+    console.error('Error parsing command:', error);
+    console.error('Command text:', text);
     // Return a safe fallback
     return {
       type: 'UNKNOWN',
@@ -105,13 +120,30 @@ export function parseCommand(text: string, context?: CampaignContext): AICommand
  * Determine the type of command from natural language
  */
 function determineCommandType(text: string): AICommand['type'] {
+  console.log('Determining command type for:', text);
+  
   for (const [type, patterns] of Object.entries(COMMAND_PATTERNS)) {
+    console.log(`Checking patterns for ${type}:`);
     for (const pattern of patterns) {
-      if (pattern.test(text)) {
+      const matches = pattern.test(text);
+      console.log(`  Pattern: ${pattern.source} - Matches: ${matches}`);
+      if (matches) {
+        console.log(`  Found match! Command type: ${type}`);
         return type as AICommand['type'];
       }
     }
   }
+  
+  // Fallback: Check for location-related keywords even if no pattern matched
+  const locationKeywords = ['location', 'place', 'city', 'village', 'town', 'dungeon', 'forest', 'mountain', 'castle'];
+  const hasLocationKeywords = locationKeywords.some(keyword => text.includes(keyword));
+  
+  if (hasLocationKeywords) {
+    console.log('Fallback: Found location keywords, returning CREATE_LOCATION');
+    return 'CREATE_LOCATION';
+  }
+  
+  console.log('No patterns matched, returning UNKNOWN');
   return 'UNKNOWN';
 }
 

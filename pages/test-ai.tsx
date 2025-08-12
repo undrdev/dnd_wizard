@@ -13,7 +13,7 @@ export default function TestAI() {
     setResponse('');
 
     try {
-      const res = await fetch('/api/generateContent', {
+      const res = await fetch('https://us-central1-dnd-wizard-app.cloudfunctions.net/generateContentFunction', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -24,6 +24,8 @@ export default function TestAI() {
           systemMessage: 'You are a helpful D&D assistant.',
           temperature: 0.7,
           maxTokens: 500,
+          provider: 'openai',
+          apiKey: process.env.OPENAI_API_KEY || 'test-key', // This will need to be provided by user
         }),
       });
 
@@ -100,10 +102,10 @@ export default function TestAI() {
             <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
               <h3 className="text-sm font-medium text-blue-800 mb-2">Instructions:</h3>
               <ol className="text-sm text-blue-700 space-y-1">
-                <li>1. Make sure you have set your OpenAI API key in the .env.local file</li>
-                <li>2. The API key should be set as: OPENAI_API_KEY=your_key_here</li>
-                <li>3. Restart the development server after adding the API key</li>
-                <li>4. This test page helps verify the API integration is working</li>
+                <li>1. This test page uses Firebase Functions for AI processing</li>
+                <li>2. API keys are now managed through the AI settings dialog</li>
+                <li>3. Use the main AI chat interface to configure your API keys</li>
+                <li>4. This test page is for development purposes only</li>
               </ol>
             </div>
           </div>

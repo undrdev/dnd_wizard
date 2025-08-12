@@ -5,6 +5,7 @@ import { useAIStore } from '@/stores/useAIStore';
 import { useAI } from '@/hooks/useAI';
 import { AISettingsModal } from './AISettingsModal';
 import { AIContentPreview } from './AIContentPreview';
+import { AIKeySetupDialog } from './AIKeySetupDialog';
 import type { AIMessage } from '@/types';
 
 export function AIChat() {
@@ -13,6 +14,7 @@ export function AIChat() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const hasLoadedKeys = useRef(false);
 
   const { getCurrentCampaignData } = useAppStore();
   const { hasValidProvider, conversationHistory, currentProvider, loadAPIKeysFromFirebase, isLoadingKeys } = useAIStore();
@@ -20,43 +22,69 @@ export function AIChat() {
     isGenerating,
     previewContent,
     error,
+    showKeySetupDialog,
     processCommand,
     acceptPreviewContent,
     rejectPreviewContent,
     generateSuggestions,
-    clearError
+    clearError,
+    onKeySetupComplete
   } = useAI();
 
   const { campaign } = getCurrentCampaignData();
 
   useEffect(() => {
+    console.log('🔍 AIChat: Conversation history updated, length:', conversationHistory.length);
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversationHistory]);
 
   useEffect(() => {
-    // Load API keys from Firebase on mount
-    loadAPIKeysFromFirebase();
+    console.log('🔍 AIChat: Component mounted');
+    console.log('🔍 AIChat: Has loaded keys:', hasLoadedKeys.current);
+    console.log('🔍 AIChat: Is loading keys:', isLoadingKeys);
+    
+    // Load API keys from Firebase on mount (only once)
+    if (!hasLoadedKeys.current) {
+      console.log('🔍 AIChat: Loading API keys from Firebase');
+      hasLoadedKeys.current = true;
+      loadAPIKeysFromFirebase();
+    }
   }, [loadAPIKeysFromFirebase]);
 
   useEffect(() => {
     if (error) {
+      console.log('🔍 AIChat: Error detected:', error);
       // Auto-clear error after 5 seconds
-      const timer = setTimeout(clearError, 5000);
+      const timer = setTimeout(() => {
+        console.log('🔍 AIChat: Auto-clearing error');
+        clearError();
+      }, 5000);
       return () => clearTimeout(timer);
     }
   }, [error, clearError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || isGenerating || !hasValidProvider()) return;
+    console.log('🔍 AIChat: Form submitted');
+    console.log('🔍 AIChat: Message:', message);
+    console.log('🔍 AIChat: Is generating:', isGenerating);
+    console.log('🔍 AIChat: Has valid provider:', hasValidProvider());
+    
+    if (!message.trim() || isGenerating || !hasValidProvider()) {
+      console.log('❌ AIChat: Form submission blocked');
+      return;
+    }
 
     const command = message.trim();
+    console.log('🔍 AIChat: Processing command:', command);
     setMessage('');
 
     try {
+      console.log('🔍 AIChat: Calling processCommand');
       await processCommand(command);
+      console.log('✅ AIChat: Command processed successfully');
     } catch (error) {
-      console.error('AI chat error:', error);
+      console.error('❌ AIChat: Error processing command:', error);
     }
   };
 
@@ -108,6 +136,7 @@ export function AIChat() {
   ];
 
   const handleQuickAction = (prompt: string) => {
+    console.log('🔍 AIChat: Quick action selected:', prompt);
     setMessage(prompt);
   };
 
@@ -122,6 +151,16 @@ export function AIChat() {
           <p className="text-sm text-gray-600 mb-4">
             Loading your saved AI settings...
           </p>
+          <button
+            onClick={() => {
+              // Force stop loading if it takes too long
+              hasLoadedKeys.current = false;
+              window.location.reload();
+            }}
+            className="mt-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-800 underline"
+          >
+            Skip loading
+          </button>
         </div>
       </div>
     );
@@ -287,6 +326,14 @@ export function AIChat() {
       <AISettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
+      />
+
+      <AIKeySetupDialog
+        isOpen={showKeySetupDialog}
+        onClose={() => {
+          // The dialog will be closed by the useAI hook when setup is complete
+        }}
+        onSetupComplete={onKeySetupComplete}
       />
     </div>
   );

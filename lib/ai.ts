@@ -57,7 +57,13 @@ export class AIService {
     }
 
     try {
-      const response = await fetch('/api/generateContent', {
+      console.log('🔍 AI Service: Making OpenAI request to Firebase Functions');
+      console.log('🔍 AI Service: Prompt:', prompt.substring(0, 100) + '...');
+      console.log('🔍 AI Service: Model:', config.model);
+      console.log('🔍 AI Service: Provider: openai');
+      
+      // Use Firebase Functions instead of local API
+      const response = await fetch('https://us-central1-dnd-wizard-app.cloudfunctions.net/generateContentFunction', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -68,23 +74,29 @@ export class AIService {
           systemMessage: this.getSystemPrompt(context),
           temperature: 0.7,
           maxTokens: 2000,
+          provider: 'openai',
+          apiKey: config.apiKey,
         }),
       });
 
+      console.log('🔍 AI Service: Response status:', response.status, response.statusText);
+      
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('API Error Response:', errorText);
-        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+        console.error('❌ AI Service: Firebase Functions Error Response:', errorText);
+        throw new Error(`Firebase Functions request failed: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
+      console.log('🔍 AI Service: Response data:', data);
 
       if (!data.success) {
-        console.error('API Error Data:', data);
-        throw new Error(`API error: ${data.error || 'Unknown error'}`);
+        console.error('❌ AI Service: Firebase Functions Error Data:', data);
+        throw new Error(`Firebase Functions error: ${data.error || 'Unknown error'}`);
       }
 
-      return this.parseAIResponse(data.content);
+      console.log('✅ AI Service: Successfully received response');
+      return this.parseAIResponse(data.data?.message || data.data);
     } catch (error) {
       console.error('OpenAI generation error:', error);
       throw error;
@@ -98,32 +110,37 @@ export class AIService {
     }
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      // Use Firebase Functions instead of direct API call
+      const response = await fetch('https://us-central1-dnd-wizard-app.cloudfunctions.net/generateContentFunction', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': config.apiKey,
-          'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
+          prompt,
           model: config.model,
-          max_tokens: 2000,
-          system: this.getSystemPrompt(context),
-          messages: [
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
+          systemMessage: this.getSystemPrompt(context),
+          temperature: 0.7,
+          maxTokens: 2000,
+          provider: 'anthropic',
+          apiKey: config.apiKey,
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`Anthropic API error: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('Firebase Functions Error Response:', errorText);
+        throw new Error(`Firebase Functions request failed: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
-      return this.parseAIResponse(data.content[0].text);
+
+      if (!data.success) {
+        console.error('Firebase Functions Error Data:', data);
+        throw new Error(`Firebase Functions error: ${data.error || 'Unknown error'}`);
+      }
+
+      return this.parseAIResponse(data.data?.message || data.data);
     } catch (error) {
       console.error('Anthropic generation error:', error);
       throw error;
@@ -243,6 +260,8 @@ EXISTING CONTENT:`;
 
   async processCommand(request: AICommandRequest): Promise<AICommandResponse> {
     try {
+      console.log('AI Service: Processing command:', request.command);
+      
       const provider = this.getPreferredProvider();
       if (!provider) {
         throw new Error('No AI provider configured');
@@ -250,6 +269,7 @@ EXISTING CONTENT:`;
 
       // Parse the command for better context
       const parsedCommand = parseCommand(request.command, request.context as CampaignContext);
+      console.log('AI Service: Parsed command:', parsedCommand);
 
       // Generate content with enhanced context
       const result = await this.generateContentWithCommand(
@@ -258,13 +278,16 @@ EXISTING CONTENT:`;
         request.context as CampaignContext,
         parsedCommand
       );
+      
+      console.log('AI Service: Generated result:', result);
 
       return {
         success: true,
         data: result,
       };
     } catch (error) {
-      console.error('Command processing error:', error);
+      console.error('AI Service: Command processing error:', error);
+      console.error('AI Service: Error stack:', error instanceof Error ? error.stack : 'No stack');
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -303,7 +326,7 @@ EXISTING CONTENT:`;
     }
 
     try {
-      const response = await fetch('/api/generateContent', {
+      const response = await fetch('https://us-central1-dnd-wizard-app.cloudfunctions.net/generateContentFunction', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -314,6 +337,8 @@ EXISTING CONTENT:`;
           systemMessage: this.getSystemPrompt(context, command),
           temperature: 0.7,
           maxTokens: 3000,
+          provider: 'openai',
+          apiKey: config.apiKey,
         }),
       });
 
@@ -348,32 +373,36 @@ EXISTING CONTENT:`;
     }
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('https://us-central1-dnd-wizard-app.cloudfunctions.net/generateContentFunction', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': config.apiKey,
-          'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
+          prompt,
           model: config.model,
-          max_tokens: 3000,
-          system: this.getSystemPrompt(context, command),
-          messages: [
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
+          systemMessage: this.getSystemPrompt(context, command),
+          temperature: 0.7,
+          maxTokens: 3000,
+          provider: 'anthropic',
+          apiKey: config.apiKey,
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`Anthropic API error: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('Firebase Functions Error Response:', errorText);
+        throw new Error(`Firebase Functions request failed: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
-      return this.parseAIResponse(data.content[0].text);
+
+      if (!data.success) {
+        console.error('Firebase Functions Error Data:', data);
+        throw new Error(`Firebase Functions error: ${data.error || 'Unknown error'}`);
+      }
+
+      return this.parseAIResponse(data.data?.message || data.data);
     } catch (error) {
       console.error('Anthropic generation error:', error);
       throw error;

@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { enhancedAI, FullCampaignRequest, GeneratedCampaign } from '@/lib/enhancedAI';
 import { useAppStore } from '@/stores/useAppStore';
+import { useAIStore } from '@/stores/useAIStore';
 import { CampaignService, NPCService, QuestService, LocationService } from '@/lib/firestore';
 
 interface FullCampaignGeneratorProps {
@@ -20,6 +21,7 @@ interface FullCampaignGeneratorProps {
 
 export function FullCampaignGenerator({ isOpen, onClose }: FullCampaignGeneratorProps) {
   const { addCampaign, addNPC, addQuest, addLocation } = useAppStore();
+  const { providers, currentProvider } = useAIStore();
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationStep, setGenerationStep] = useState('');
@@ -91,6 +93,18 @@ export function FullCampaignGenerator({ isOpen, onClose }: FullCampaignGenerator
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       setGenerationStep('Weaving the narrative together...');
+      
+      // Set API configuration for enhanced AI service
+      if (currentProvider && providers[currentProvider]) {
+        const config = providers[currentProvider];
+        enhancedAI.setAPIConfig({
+          provider: currentProvider,
+          apiKey: config.apiKey,
+          model: config.model
+        });
+      } else {
+        throw new Error('No AI provider configured. Please set up your API key in the AI settings.');
+      }
       
       const generatedCampaign = await enhancedAI.generateFullCampaign(formData);
       

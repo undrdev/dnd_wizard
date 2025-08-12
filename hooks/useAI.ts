@@ -11,6 +11,7 @@ interface UseAIReturn {
   lastCommand: AICommand | null;
   previewContent: ParsedContent | null;
   error: string | null;
+  showKeySetupDialog: boolean;
   
   // Actions
   processCommand: (command: string) => Promise<AIMessage>;
@@ -18,6 +19,7 @@ interface UseAIReturn {
   rejectPreviewContent: () => void;
   generateSuggestions: (type: 'npc' | 'quest' | 'location' | 'general') => Promise<string[]>;
   clearError: () => void;
+  onKeySetupComplete: () => void;
 }
 
 export function useAI(): UseAIReturn {
@@ -25,15 +27,21 @@ export function useAI(): UseAIReturn {
   const [lastCommand, setLastCommand] = useState<AICommand | null>(null);
   const [previewContent, setPreviewContent] = useState<ParsedContent | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showKeySetupDialog, setShowKeySetupDialog] = useState(false);
   
   const { getCurrentCampaignData, addNPC, addQuest, addLocation } = useAppStore();
   const { hasValidProvider, addMessage } = useAIStore();
   
   const processCommand = useCallback(async (command: string): Promise<AIMessage> => {
+    console.log('🔍 useAI: Starting processCommand with:', command);
+    
     if (!hasValidProvider()) {
-      throw new Error('No valid AI provider configured');
+      console.log('❌ useAI: No valid provider, showing setup dialog');
+      setShowKeySetupDialog(true);
+      throw new Error('No valid AI provider configured. Please set up your API key.');
     }
     
+    console.log('✅ useAI: Valid provider found');
     setIsGenerating(true);
     setError(null);
     
@@ -44,8 +52,16 @@ export function useAI(): UseAIReturn {
         throw new Error('No active campaign');
       }
       
+      console.log('🔍 useAI: Campaign data:', { 
+        campaignId: campaign.id, 
+        locationsCount: locations.length, 
+        npcsCount: npcs.length, 
+        questsCount: quests.length 
+      });
+      
       // Parse the command
       const parsedCommand = parseCommand(command, { campaign, locations, npcs, quests });
+      console.log('🔍 useAI: Parsed command:', parsedCommand);
       setLastCommand(parsedCommand);
       
       // Create user message
@@ -58,6 +74,8 @@ export function useAI(): UseAIReturn {
       // Add to conversation history
       addMessage(userMessage);
       
+      console.log('🔍 useAI: Calling aiService.processCommand');
+      
       // Process with AI service
       const response = await aiService.processCommand({
         command,
@@ -65,7 +83,10 @@ export function useAI(): UseAIReturn {
         context: { campaign, locations, npcs, quests },
       });
       
+      console.log('🔍 useAI: AI service response:', response);
+      
       if (!response.success) {
+        console.error('❌ useAI: AI processing failed:', response.error);
         throw new Error(response.error || 'AI processing failed');
       }
       
@@ -85,6 +106,13 @@ export function useAI(): UseAIReturn {
       
       return assistantMessage;
     } catch (err) {
+      console.error('AI processing error:', err);
+      console.error('Error details:', {
+        message: err instanceof Error ? err.message : 'Unknown error',
+        stack: err instanceof Error ? err.stack : undefined,
+        command: command
+      });
+      
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
       
@@ -281,19 +309,26 @@ export function useAI(): UseAIReturn {
     }
   }, [hasValidProvider, getCurrentCampaignData]);
   
-  const clearError = useCallback((): void => {
+    const clearError = useCallback((): void => {
     setError(null);
   }, []);
-  
+
+  const handleKeySetupComplete = useCallback((): void => {
+    setShowKeySetupDialog(false);
+    setError(null);
+  }, []);
+
   return {
     isGenerating,
     lastCommand,
     previewContent,
     error,
+    showKeySetupDialog,
     processCommand,
     acceptPreviewContent,
     rejectPreviewContent,
     generateSuggestions,
     clearError,
+    onKeySetupComplete: handleKeySetupComplete,
   };
 }

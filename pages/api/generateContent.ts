@@ -6,6 +6,7 @@ interface GenerateContentRequest {
   systemMessage?: string;
   temperature?: number;
   maxTokens?: number;
+  apiKey?: string; // Allow API key to be passed from frontend
 }
 
 interface GenerateContentResponse {
@@ -31,7 +32,8 @@ export default async function handler(
       model = 'gpt-4-turbo', 
       systemMessage = 'You are a helpful assistant.',
       temperature = 0.8,
-      maxTokens = 4000
+      maxTokens = 4000,
+      apiKey: requestApiKey
     }: GenerateContentRequest = req.body;
 
     if (!prompt) {
@@ -41,13 +43,13 @@ export default async function handler(
       });
     }
 
-    // Get API key from environment variables (server-side only)
-    const apiKey = process.env.OPENAI_API_KEY;
+    // Get API key from request body or environment variables
+    const apiKey = requestApiKey || process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      console.error('OpenAI API key not configured');
+      console.error('OpenAI API key not provided in request or environment');
       return res.status(500).json({ 
         success: false, 
-        error: 'OpenAI API key not configured' 
+        error: 'OpenAI API key not configured. Please add your API key in the AI settings.' 
       });
     }
 

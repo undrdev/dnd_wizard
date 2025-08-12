@@ -48,9 +48,14 @@ export interface CampaignAct {
  */
 export class EnhancedAIService {
   private baseUrl: string;
+  private apiConfig: { provider: 'openai' | 'anthropic'; apiKey: string; model: string } | null = null;
 
   constructor() {
     this.baseUrl = 'https://api.openai.com/v1';
+  }
+
+  setAPIConfig(config: { provider: 'openai' | 'anthropic'; apiKey: string; model: string }) {
+    this.apiConfig = config;
   }
 
   /**
@@ -255,33 +260,41 @@ Format as JSON with acts array and overall plot information.`;
 
   private async callOpenAI(prompt: string): Promise<string> {
     try {
+      if (!this.apiConfig) {
+        throw new Error('API configuration not set. Please configure your AI provider first.');
+      }
+
       // Make request to our Firebase Function instead of directly to OpenAI
-      const response = await fetch('/api/generateContent', {
+      const response = await fetch('https://us-central1-dnd-wizard-app.cloudfunctions.net/generateContentFunction', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           prompt,
-          model: 'gpt-4-turbo',
+          model: this.apiConfig.model,
           systemMessage: 'You are an expert D&D Dungeon Master with years of experience creating engaging campaigns. Always respond with valid JSON when requested.',
+          temperature: 0.7,
+          maxTokens: 2000,
+          provider: this.apiConfig.provider,
+          apiKey: this.apiConfig.apiKey,
         }),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('API Error Response:', errorText);
-        throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`);
+        console.error('Firebase Functions Error Response:', errorText);
+        throw new Error(`Firebase Functions request failed: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const data = await response.json();
 
       if (!data.success) {
-        console.error('API Error Data:', data);
-        throw new Error(`API error: ${data.error || 'Unknown error'}`);
+        console.error('Firebase Functions Error Data:', data);
+        throw new Error(`Firebase Functions error: ${data.error || 'Unknown error'}`);
       }
 
-      return data.content || '';
+      return data.data?.message || data.data || '';
     } catch (error) {
       console.error('OpenAI API call failed:', error);
       if (error instanceof Error) {
