@@ -122,7 +122,7 @@ export async function generateContent(req: Request, res: Response) {
     return res.status(200).json({
       success: true,
       data: parsedResult,
-      command: parsedCommand, // Include parsed command for debugging
+      command: parsedCommand,
     });
   } catch (error) {
     console.error('❌ Firebase Function: Error generating content:', error);

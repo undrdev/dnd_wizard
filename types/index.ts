@@ -1,11 +1,27 @@
 // Core data models based on technical specification
 
+export interface AIGeneratedCampaignData {
+  setting?: string;
+  plotHooks?: string[];
+  keyLocations?: string[];
+  importantNPCs?: string[];
+  suggestedQuests?: string[];
+  startingLevel?: string;
+  partySize?: string;
+  themes?: string[];
+  tone?: string;
+  challenges?: string[];
+  rewards?: string[];
+  generatedAt?: string;
+}
+
 export interface Campaign {
   id: string;
   ownerId: string;
   title: string;
   description: string;
   mapSeed: string;
+  aiGenerated?: AIGeneratedCampaignData;
   createdAt: Date;
   updatedAt: Date;
 }

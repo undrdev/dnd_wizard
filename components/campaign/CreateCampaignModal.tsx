@@ -141,12 +141,125 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
         mapSeed: uuidv4(), // Generate a unique map seed
       };
 
-      if (formData.generateWithAI) {
-        // TODO: Integrate with AI service to generate campaign content
-        // For now, just create the basic campaign
-        campaignData.description = formData.concept 
-          ? `${formData.description}\n\nConcept: ${formData.concept}`
-          : formData.description;
+      if (formData.generateWithAI && currentProvider && providers[currentProvider]) {
+        // Generate enhanced campaign content with AI
+        try {
+          const enhancedPrompt = `Generate a comprehensive D&D campaign with the following specifications:
+            - Title: ${formData.title}
+            - Concept: ${formData.concept || 'Any fantasy setting'}
+            - Base Description: ${formData.description}
+            
+            Please provide an enhanced campaign with:
+            1. An improved title (if needed)
+            2. A detailed campaign description including:
+               - Setting overview
+               - Main plot hooks
+               - Key locations
+               - Important NPCs
+               - Potential quests
+               - Player hooks and motivations
+            3. Suggested starting level and party size
+            4. Campaign themes and tone
+            5. Potential challenges and rewards
+            
+            Format the response as JSON with the following structure:
+            {
+              "title": "Enhanced Campaign Title",
+              "description": "Comprehensive campaign description...",
+              "setting": "Setting overview...",
+              "plotHooks": ["Hook 1", "Hook 2", "Hook 3"],
+              "keyLocations": ["Location 1", "Location 2", "Location 3"],
+              "importantNPCs": ["NPC 1", "NPC 2", "NPC 3"],
+              "suggestedQuests": ["Quest 1", "Quest 2", "Quest 3"],
+              "startingLevel": "1-3",
+              "partySize": "3-5 players",
+              "themes": ["Theme 1", "Theme 2"],
+              "tone": "Serious/Adventure/Humorous",
+              "challenges": ["Challenge 1", "Challenge 2"],
+              "rewards": ["Reward 1", "Reward 2"]
+            }`;
+
+          const response = await fetch('https://us-central1-dnd-wizard-app.cloudfunctions.net/generateContentFunction', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              prompt: enhancedPrompt,
+              model: providers[currentProvider].model,
+              systemMessage: 'You are an expert D&D campaign designer. Create engaging, detailed, and playable campaign content that DMs can immediately use.',
+              temperature: 0.7,
+              maxTokens: 2000,
+              provider: currentProvider,
+              apiKey: providers[currentProvider].apiKey,
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            
+            if (data.success && data.data?.message) {
+              try {
+                const generatedContent = JSON.parse(data.data.message);
+                
+                // Update campaign data with AI-generated content
+                campaignData.title = generatedContent.title || campaignData.title;
+                campaignData.description = generatedContent.description || campaignData.description;
+                
+                // Add AI-generated metadata to the campaign
+                campaignData.aiGenerated = {
+                  setting: generatedContent.setting,
+                  plotHooks: generatedContent.plotHooks || [],
+                  keyLocations: generatedContent.keyLocations || [],
+                  importantNPCs: generatedContent.importantNPCs || [],
+                  suggestedQuests: generatedContent.suggestedQuests || [],
+                  startingLevel: generatedContent.startingLevel,
+                  partySize: generatedContent.partySize,
+                  themes: generatedContent.themes || [],
+                  tone: generatedContent.tone,
+                  challenges: generatedContent.challenges || [],
+                  rewards: generatedContent.rewards || [],
+                  generatedAt: new Date().toISOString(),
+                };
+
+                addToast({
+                  type: 'success',
+                  title: 'Campaign Enhanced',
+                  message: 'AI has generated comprehensive campaign content!',
+                  duration: 3000
+                });
+              } catch (parseError) {
+                console.error('Error parsing AI response:', parseError);
+                // Fall back to basic enhancement
+                campaignData.description = formData.concept 
+                  ? `${formData.description}\n\nConcept: ${formData.concept}`
+                  : formData.description;
+                
+                addToast({
+                  type: 'warning',
+                  title: 'Partial Enhancement',
+                  message: 'AI generated content but there was an issue parsing it. Using basic enhancement.',
+                  duration: 5000
+                });
+              }
+            }
+          } else {
+            throw new Error('Failed to generate enhanced campaign content');
+          }
+        } catch (error) {
+          console.error('Error generating enhanced campaign content:', error);
+          // Fall back to basic enhancement
+          campaignData.description = formData.concept 
+            ? `${formData.description}\n\nConcept: ${formData.concept}`
+            : formData.description;
+          
+          addToast({
+            type: 'warning',
+            title: 'AI Enhancement Failed',
+            message: 'Failed to generate enhanced content. Using basic campaign creation.',
+            duration: 5000
+          });
+        }
       }
 
       const campaignId = await CampaignService.createCampaign(campaignData);

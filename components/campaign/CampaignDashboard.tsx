@@ -5,6 +5,7 @@ import { CampaignSidebar } from './CampaignSidebar';
 import { ImportExportModal } from './ImportExportModal';
 import { LocationBrowser } from '@/components/location/LocationBrowser';
 import { PricingInfo } from '@/components/ui/PricingInfo';
+import { AICampaignPreview } from './AICampaignPreview';
 import { migrateLocations } from '@/lib/locationMigration';
 import { CloudArrowUpIcon, CloudArrowDownIcon } from '@heroicons/react/24/outline';
 
@@ -123,6 +124,13 @@ export function CampaignDashboard() {
               <CampaignActions />
             </div>
           </div>
+          
+          {/* AI Campaign Preview */}
+          {currentCampaign.aiGenerated && (
+            <div className="mt-4">
+              <AICampaignPreview aiData={currentCampaign.aiGenerated} />
+            </div>
+          )}
           
           {/* Pricing Info */}
           <div className="mt-4">
