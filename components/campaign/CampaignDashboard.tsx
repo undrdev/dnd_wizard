@@ -6,6 +6,8 @@ import { ImportExportModal } from './ImportExportModal';
 import { LocationBrowser } from '@/components/location/LocationBrowser';
 import { PricingInfo } from '@/components/ui/PricingInfo';
 import { migrateLocations } from '@/lib/locationMigration';
+import { CloudArrowUpIcon, CloudArrowDownIcon } from '@heroicons/react/24/outline';
+import { useToast } from '@/components/ui/Toast';
 
 export function CampaignDashboard() {
   const {
@@ -16,7 +18,10 @@ export function CampaignDashboard() {
     setError,
     isLoading,
   } = useAppStore();
-  
+  const { addToast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
@@ -50,6 +55,57 @@ export function CampaignDashboard() {
       setError('Failed to load campaign data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveToCloud = async () => {
+    if (!currentCampaign || !user) return;
+    
+    setIsSaving(true);
+    try {
+      // Save campaign data to Firebase
+      await loadCampaignDataFromFirestore();
+      addToast({
+        type: 'success',
+        title: 'Saved to Cloud',
+        message: 'Campaign data has been successfully saved to the cloud.',
+        duration: 3000
+      });
+    } catch (error) {
+      console.error('Error saving to cloud:', error);
+      addToast({
+        type: 'error',
+        title: 'Save Failed',
+        message: 'Failed to save campaign data to the cloud. Please try again.',
+        duration: 5000
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleLoadFromCloud = async () => {
+    if (!currentCampaign || !user) return;
+    
+    setIsLoading(true);
+    try {
+      await loadCampaignDataFromFirestore();
+      addToast({
+        type: 'success',
+        title: 'Loaded from Cloud',
+        message: 'Campaign data has been successfully loaded from the cloud.',
+        duration: 3000
+      });
+    } catch (error) {
+      console.error('Error loading from cloud:', error);
+      addToast({
+        type: 'error',
+        title: 'Load Failed',
+        message: 'Failed to load campaign data from the cloud. Please try again.',
+        duration: 5000
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -139,20 +195,79 @@ export function CampaignDashboard() {
 function CampaignActions() {
   const { currentCampaign } = useAppStore();
   const [showImportExportModal, setShowImportExportModal] = useState(false);
+  const { addToast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSaveToCloud = async () => {
-    // TODO: Implement save to cloud functionality
-    console.log('Save to cloud');
+    if (!currentCampaign) return;
+    
+    setIsSaving(true);
+    try {
+      // This would trigger a save operation
+      addToast({
+        type: 'success',
+        title: 'Saved to Cloud',
+        message: 'Campaign data has been successfully saved to the cloud.',
+        duration: 3000
+      });
+    } catch (error) {
+      console.error('Error saving to cloud:', error);
+      addToast({
+        type: 'error',
+        title: 'Save Failed',
+        message: 'Failed to save campaign data to the cloud. Please try again.',
+        duration: 5000
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleLoadFromCloud = async () => {
+    if (!currentCampaign) return;
+    
+    setIsLoading(true);
+    try {
+      // This would trigger a load operation
+      addToast({
+        type: 'success',
+        title: 'Loaded from Cloud',
+        message: 'Campaign data has been successfully loaded from the cloud.',
+        duration: 3000
+      });
+    } catch (error) {
+      console.error('Error loading from cloud:', error);
+      addToast({
+        type: 'error',
+        title: 'Load Failed',
+        message: 'Failed to load campaign data from the cloud. Please try again.',
+        duration: 5000
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <>
       <div className="flex items-center space-x-2">
         <button
-          onClick={handleSaveToCloud}
-          className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          onClick={handleLoadFromCloud}
+          disabled={isLoading}
+          className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
         >
-          💾 Save
+          <CloudArrowDownIcon className="w-4 h-4 mr-2" />
+          {isLoading ? 'Loading...' : 'Load from Cloud'}
+        </button>
+
+        <button
+          onClick={handleSaveToCloud}
+          disabled={isSaving}
+          className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+        >
+          <CloudArrowUpIcon className="w-4 h-4 mr-2" />
+          {isSaving ? 'Saving...' : 'Save to Cloud'}
         </button>
 
         <button

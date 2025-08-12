@@ -3,6 +3,7 @@ import { Dialog } from '@headlessui/react';
 import { XMarkIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { useAppStore } from '@/stores/useAppStore';
 import { useAIStore } from '@/stores/useAIStore';
+import { useToast } from '@/components/ui/Toast';
 import { CampaignService } from '@/lib/firestore';
 import type { CampaignFormData, CreateCampaignData } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,7 +16,8 @@ interface CreateCampaignModalProps {
 
 export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampaignModalProps) {
   const { user, addCampaign, setCurrentCampaign, setLoading, setError } = useAppStore();
-  const { hasValidProvider, isGenerating } = useAIStore();
+  const { providers, currentProvider } = useAIStore();
+  const { addToast } = useToast();
   
   const [formData, setFormData] = useState<CampaignFormData>({
     title: '',
@@ -25,16 +27,115 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleInputChange = (field: keyof CampaignFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleGenerateWithAI = async () => {
+    if (!currentProvider || !providers[currentProvider]) {
+      addToast({
+        type: 'error',
+        title: 'AI Not Configured',
+        message: 'Please configure your AI settings before generating content.',
+        duration: 5000
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const prompt = `Generate a D&D campaign with the following specifications:
+        - Genre: ${formData.genre}
+        - Setting: ${formData.setting || 'Any'}
+        - Theme: ${formData.theme || 'Any'}
+        - Tone: ${formData.tone}
+        - Complexity: ${formData.complexity}
+        
+        Please provide:
+        1. A compelling campaign title
+        2. A detailed campaign description
+        3. A rich setting description
+        4. A central theme for the campaign
+        
+        Format the response as JSON with the following structure:
+        {
+          "title": "Campaign Title",
+          "description": "Campaign description...",
+          "setting": "Setting description...",
+          "theme": "Central theme..."
+        }`;
+
+      const response = await fetch('https://us-central1-dnd-wizard-app.cloudfunctions.net/generateContentFunction', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt,
+          model: providers[currentProvider].model,
+          systemMessage: 'You are a creative D&D campaign designer. Generate engaging and detailed campaign content.',
+          temperature: 0.8,
+          maxTokens: 1500,
+          provider: currentProvider,
+          apiKey: providers[currentProvider].apiKey,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate campaign content');
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.data?.message) {
+        try {
+          const generatedContent = JSON.parse(data.data.message);
+          
+          setFormData(prev => ({
+            ...prev,
+            title: generatedContent.title || prev.title,
+            description: generatedContent.description || prev.description,
+            setting: generatedContent.setting || prev.setting,
+            theme: generatedContent.theme || prev.theme,
+          }));
+
+          addToast({
+            type: 'success',
+            title: 'Content Generated',
+            message: 'AI has generated campaign content for you!',
+            duration: 3000
+          });
+        } catch (parseError) {
+          console.error('Error parsing AI response:', parseError);
+          addToast({
+            type: 'warning',
+            title: 'Partial Generation',
+            message: 'AI generated content but there was an issue parsing it. Please review and edit manually.',
+            duration: 5000
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error generating campaign content:', error);
+      addToast({
+        type: 'error',
+        title: 'Generation Failed',
+        message: 'Failed to generate campaign content. Please try again or create manually.',
+        duration: 5000
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || isSubmitting) return;
 
-    if (formData.generateWithAI && !hasValidProvider()) {
+    if (formData.generateWithAI && !currentProvider) {
       setError('Please configure an AI provider first');
       return;
     }
@@ -118,15 +219,35 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
               <label htmlFor="title" className="block text-sm font-medium text-gray-700">
                 Campaign Title *
               </label>
-              <input
-                id="title"
-                type="text"
-                required
-                value={formData.title}
-                onChange={(e) => handleInputChange('title', e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                placeholder="Enter campaign title"
-              />
+              <div className="mt-1 flex space-x-2">
+                <input
+                  id="title"
+                  type="text"
+                  required
+                  value={formData.title}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="Enter campaign title"
+                />
+                <button
+                  type="button"
+                  onClick={handleGenerateWithAI}
+                  disabled={isGenerating || !currentProvider}
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50"
+                >
+                  {isGenerating ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
+                      AI
+                    </>
+                  ) : (
+                    <>
+                      <span className="mr-1">🤖</span>
+                      AI
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
             <div>
@@ -160,7 +281,7 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
               </label>
             </div>
 
-            {!hasValidProvider() && formData.generateWithAI && (
+            {!currentProvider && formData.generateWithAI && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
                 <p className="text-sm text-yellow-800">
                   Please configure an AI provider in settings to use AI generation.
@@ -198,7 +319,7 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting || (formData.generateWithAI && !hasValidProvider())}
+                disabled={isSubmitting || (formData.generateWithAI && !currentProvider)}
                 className="px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
