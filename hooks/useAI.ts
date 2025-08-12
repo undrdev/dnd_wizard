@@ -4,6 +4,7 @@ import { useAIStore } from '@/stores/useAIStore';
 import { aiService } from '@/lib/ai';
 import { parseCommand, parseAIResponse, type AICommand, type ParsedContent } from '@/lib/aiParsers';
 import type { AIMessage, NPC, Quest, EnhancedLocation } from '@/types';
+import type { AIError } from '@/lib/aiErrorHandling';
 
 interface UseAIReturn {
   // State
@@ -11,6 +12,7 @@ interface UseAIReturn {
   lastCommand: AICommand | null;
   previewContent: ParsedContent | null;
   error: string | null;
+  aiError: AIError | null;
   showKeySetupDialog: boolean;
   
   // Actions
@@ -19,6 +21,7 @@ interface UseAIReturn {
   rejectPreviewContent: () => void;
   generateSuggestions: (type: 'npc' | 'quest' | 'location' | 'general') => Promise<string[]>;
   clearError: () => void;
+  clearAIError: () => void;
   onKeySetupComplete: () => void;
 }
 
@@ -27,6 +30,7 @@ export function useAI(): UseAIReturn {
   const [lastCommand, setLastCommand] = useState<AICommand | null>(null);
   const [previewContent, setPreviewContent] = useState<ParsedContent | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<AIError | null>(null);
   const [showKeySetupDialog, setShowKeySetupDialog] = useState(false);
   
   const { getCurrentCampaignData, addNPC, addQuest, addLocation } = useAppStore();
@@ -44,6 +48,7 @@ export function useAI(): UseAIReturn {
     console.log('✅ useAI: Valid provider found');
     setIsGenerating(true);
     setError(null);
+    setAiError(null);
     
     try {
       const { campaign, locations, npcs, quests } = getCurrentCampaignData();
@@ -87,6 +92,13 @@ export function useAI(): UseAIReturn {
       
       if (!response.success) {
         console.error('❌ useAI: AI processing failed:', response.error);
+        
+        // Check if it's a structured AI error
+        if (response.error && typeof response.error === 'object' && 'type' in response.error) {
+          setAiError(response.error as AIError);
+          throw new Error('AI processing failed');
+        }
+        
         throw new Error(response.error || 'AI processing failed');
       }
       
@@ -313,6 +325,10 @@ export function useAI(): UseAIReturn {
     setError(null);
   }, []);
 
+  const clearAIError = useCallback((): void => {
+    setAiError(null);
+  }, []);
+
   const handleKeySetupComplete = useCallback((): void => {
     setShowKeySetupDialog(false);
     setError(null);
@@ -323,12 +339,14 @@ export function useAI(): UseAIReturn {
     lastCommand,
     previewContent,
     error,
+    aiError,
     showKeySetupDialog,
     processCommand,
     acceptPreviewContent,
     rejectPreviewContent,
     generateSuggestions,
     clearError,
+    clearAIError,
     onKeySetupComplete: handleKeySetupComplete,
   };
 }

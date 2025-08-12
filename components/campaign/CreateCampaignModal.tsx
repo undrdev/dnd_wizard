@@ -5,7 +5,9 @@ import { useAppStore } from '@/stores/useAppStore';
 import { useAIStore } from '@/stores/useAIStore';
 import { useToast } from '@/components/ui/Toast';
 import { CampaignService } from '@/lib/firestore';
+import { AIErrorDisplay } from '@/components/ui/AIErrorDisplay';
 import type { CampaignFormData, CreateCampaignData } from '@/types';
+import type { AIError } from '@/lib/aiErrorHandling';
 import { v4 as uuidv4 } from 'uuid';
 
 interface CreateCampaignModalProps {
@@ -28,6 +30,7 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [aiError, setAiError] = useState<AIError | null>(null);
 
 
   const handleInputChange = (field: keyof CampaignFormData, value: string | boolean) => {
@@ -46,6 +49,7 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
     }
 
     setIsGenerating(true);
+    setAiError(null); // Clear any previous errors
     try {
       const prompt = `Generate a D&D campaign with the following specifications:
         - Concept: ${formData.concept || 'Any fantasy setting'}
@@ -82,6 +86,12 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
 
       const data = await response.json();
       
+      if (!data.success && data.error) {
+        // Handle AI error
+        setAiError(data.error);
+        return;
+      }
+      
       if (data.success && data.data?.message) {
         try {
           const generatedContent = JSON.parse(data.data.message);
@@ -110,12 +120,25 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
       }
     } catch (error) {
       console.error('Error generating campaign content:', error);
-      addToast({
-        type: 'error',
-        title: 'Generation Failed',
-        message: 'Failed to generate campaign content. Please try again or create manually.',
-        duration: 5000
-      });
+      
+      // Try to parse AI error from response
+      if (error instanceof Error && error.message.includes('Failed to generate campaign content')) {
+        // This is a generic error, show a fallback message
+        addToast({
+          type: 'error',
+          title: 'Generation Failed',
+          message: 'Failed to generate campaign content. Please try again or create manually.',
+          duration: 5000
+        });
+      } else {
+        // Show generic error
+        addToast({
+          type: 'error',
+          title: 'Generation Failed',
+          message: 'An unexpected error occurred. Please try again.',
+          duration: 5000
+        });
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -390,6 +413,15 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
                   Please configure an AI provider in settings to use AI generation.
                 </p>
               </div>
+            )}
+
+            {/* AI Error Display */}
+            {aiError && (
+              <AIErrorDisplay
+                error={aiError}
+                onRetry={handleGenerateWithAI}
+                onDismiss={() => setAiError(null)}
+              />
             )}
 
             {formData.generateWithAI && (

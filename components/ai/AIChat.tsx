@@ -5,6 +5,7 @@ import { useAIStore } from '@/stores/useAIStore';
 import { useAI } from '@/hooks/useAI';
 import { useToast } from '@/components/ui/Toast';
 import { PricingInfo } from '@/components/ui/PricingInfo';
+import { AIErrorDisplay } from '@/components/ui/AIErrorDisplay';
 import { AISettingsModal } from './AISettingsModal';
 import { AIContentPreview } from './AIContentPreview';
 import { AIKeySetupDialog } from './AIKeySetupDialog';
@@ -24,11 +25,13 @@ export function AIChat() {
     isGenerating,
     previewContent,
     error,
+    aiError,
     showKeySetupDialog,
     processCommand,
     acceptPreviewContent,
     rejectPreviewContent,
     clearError,
+    clearAIError,
     onKeySetupComplete
   } = useAI();
 
@@ -220,8 +223,30 @@ export function AIChat() {
         </button>
       </div>
 
-      {/* Error Display */}
-      {error && (
+      {/* AI Error Display */}
+      {aiError && (
+        <div className="mx-4 mt-4">
+          <AIErrorDisplay
+            error={aiError}
+            onRetry={() => {
+              clearAIError();
+              // Retry the last command if available
+              if (conversationHistory.length > 0) {
+                const lastUserMessage = conversationHistory
+                  .filter(msg => msg.role === 'user')
+                  .pop();
+                if (lastUserMessage) {
+                  processCommand(lastUserMessage.content);
+                }
+              }
+            }}
+            onDismiss={clearAIError}
+          />
+        </div>
+      )}
+
+      {/* Generic Error Display */}
+      {error && !aiError && (
         <div className="mx-4 mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
           <div className="flex items-center">
             <ExclamationTriangleIcon className="h-5 w-5 text-red-400 mr-2" />

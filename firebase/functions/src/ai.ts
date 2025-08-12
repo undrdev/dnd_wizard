@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { parseOpenAIError, parseAnthropicError, parseNetworkError, type AIError } from '../../../lib/aiErrorHandling';
 
 // Initialize Firebase Admin
 if (getApps().length === 0) {
@@ -127,7 +128,32 @@ export async function generateContent(req: Request, res: Response) {
   } catch (error) {
     console.error('❌ Firebase Function: Error generating content:', error);
     console.error('❌ Firebase Function: Error stack:', error instanceof Error ? error.stack : 'No stack');
-    return res.status(500).json({ error: 'Internal server error' });
+    
+    // Try to parse AI error
+    let aiError: AIError | null = null;
+    
+    if (error instanceof Error && error.message.startsWith('{')) {
+      try {
+        aiError = JSON.parse(error.message);
+      } catch {
+        // Not a JSON error, continue
+      }
+    }
+    
+    if (aiError && aiError.type) {
+      return res.status(200).json({
+        success: false,
+        error: aiError,
+        message: aiError.userMessage
+      });
+    }
+    
+    // Fallback to generic error
+    return res.status(500).json({ 
+      success: false,
+      error: 'Internal server error',
+      message: 'An unexpected error occurred. Please try again.'
+    });
   }
 }
 
@@ -196,7 +222,15 @@ async function generateWithOpenAIDirect(
         statusText: response.statusText,
         body: errorText
       });
-      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+      
+      const aiError = parseOpenAIError({
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText,
+        provider: 'openai'
+      });
+      
+      throw new Error(JSON.stringify(aiError));
     }
 
     const data = await response.json();
@@ -211,7 +245,22 @@ async function generateWithOpenAIDirect(
     return data.choices[0].message.content;
   } catch (error) {
     console.error('OpenAI generation error:', error);
-    throw error;
+    
+    // If it's already a parsed AI error, re-throw it
+    if (error instanceof Error && error.message.startsWith('{')) {
+      try {
+        const aiError = JSON.parse(error.message);
+        if (aiError.type) {
+          throw error; // Re-throw the parsed error
+        }
+      } catch {
+        // Not a JSON error, continue to network error parsing
+      }
+    }
+    
+    // Parse network errors
+    const aiError = parseNetworkError(error instanceof Error ? error : new Error(String(error)));
+    throw new Error(JSON.stringify(aiError));
   }
 }
 
@@ -253,7 +302,15 @@ async function generateWithAnthropicDirect(
         statusText: response.statusText,
         body: errorText
       });
-      throw new Error(`Anthropic API error: ${response.status} ${response.statusText}`);
+      
+      const aiError = parseAnthropicError({
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText,
+        provider: 'anthropic'
+      });
+      
+      throw new Error(JSON.stringify(aiError));
     }
 
     const data = await response.json();
@@ -265,7 +322,22 @@ async function generateWithAnthropicDirect(
     return data.content[0].text;
   } catch (error) {
     console.error('Anthropic generation error:', error);
-    throw error;
+    
+    // If it's already a parsed AI error, re-throw it
+    if (error instanceof Error && error.message.startsWith('{')) {
+      try {
+        const aiError = JSON.parse(error.message);
+        if (aiError.type) {
+          throw error; // Re-throw the parsed error
+        }
+      } catch {
+        // Not a JSON error, continue to network error parsing
+      }
+    }
+    
+    // Parse network errors
+    const aiError = parseNetworkError(error instanceof Error ? error : new Error(String(error)));
+    throw new Error(JSON.stringify(aiError));
   }
 }
 
