@@ -3,7 +3,7 @@ import { Dialog } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useAppStore } from '@/stores/useAppStore';
 import { useQuests } from '@/hooks/useQuests';
-import type { EnhancedQuest, EnhancedQuestFormData, QuestMilestone } from '@/types';
+import type { EnhancedQuest, EnhancedQuestFormData, QuestMilestone, NPC, EnhancedLocation, Quest } from '@/types';
 
 interface QuestModalProps {
   isOpen: boolean;
@@ -268,8 +268,8 @@ interface BasicInfoTabProps {
   formData: EnhancedQuestFormData;
   setFormData: React.Dispatch<React.SetStateAction<EnhancedQuestFormData>>;
   errors: Record<string, string>;
-  npcs: any[];
-  locations: any[];
+  npcs: NPC[];
+  locations: EnhancedLocation[];
 }
 
 function BasicInfoTab({ formData, setFormData, errors, npcs, locations }: BasicInfoTabProps) {
@@ -540,7 +540,7 @@ function DetailsTab({ formData, setFormData, addMilestone, updateMilestone, remo
 interface DependenciesTabProps {
   formData: EnhancedQuestFormData;
   setFormData: React.Dispatch<React.SetStateAction<EnhancedQuestFormData>>;
-  availableQuests: any[];
+  availableQuests: Quest[];
 }
 
 function DependenciesTab({ formData, setFormData, availableQuests }: DependenciesTabProps) {

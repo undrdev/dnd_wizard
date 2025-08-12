@@ -9,7 +9,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useAppStore } from '@/stores/useAppStore';
-import type { EnhancedNPC, Location } from '@/types';
+import type { EnhancedNPC, NPC, Location } from '@/types';
 import { getRelationshipTypeDisplay } from '@/lib/npcUtils';
 
 interface NPCCardProps {
@@ -36,7 +36,7 @@ export function NPCCard({
 
   const location = locations.find(loc => loc.id === npc.locationId);
   // TODO: Implement relationship lookup with new relationship system
-  const relatedNPCs: any[] = [];
+  const relatedNPCs: NPC[] = [];
 
   // Get relationship type icon
   const getRelationshipIcon = (type: string) => {

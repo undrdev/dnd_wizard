@@ -1,4 +1,4 @@
-import type { AIProviderConfig, AIMessage, AICommandRequest, AICommandResponse } from '@/types';
+import type { AIProviderConfig, AIMessage, AICommandRequest, AICommandResponse, Campaign, EnhancedLocation, NPC, Quest } from '@/types';
 import { parseCommand, parseAIResponse, type AICommand, type CampaignContext } from './aiParsers';
 
 // AI Service class for handling AI provider interactions
@@ -421,7 +421,7 @@ export const aiService = AIService.getInstance();
 
 // Utility functions for AI interactions
 export const AIUtils = {
-  formatCampaignContext: (campaign: any, locations: any[], npcs: any[], quests: any[]) => {
+  formatCampaignContext: (campaign: Campaign, locations: EnhancedLocation[], npcs: NPC[], quests: Quest[]) => {
     return {
       campaign: {
         title: campaign.title,

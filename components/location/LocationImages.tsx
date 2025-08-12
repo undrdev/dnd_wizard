@@ -4,6 +4,19 @@ import { imageStorage } from '@/lib/imageStorage';
 import { useLocations } from '@/hooks/useLocations';
 import type { Location, LocationImage } from '@/types';
 
+interface ImageItem {
+  id: string;
+  url: string;
+  thumbnailUrl?: string;
+  caption?: string;
+  isPrimary?: boolean;
+  metadata?: {
+    name: string;
+    size: number;
+    timeCreated: string;
+  };
+}
+
 interface LocationImagesProps {
   location: Location;
   onLocationUpdate?: (location: Location) => void;
@@ -31,7 +44,7 @@ export function LocationImages({
     },
   })) || [];
 
-  const handleImagesChange = (images: any[]) => {
+  const handleImagesChange = (images: ImageItem[]) => {
     // Convert back to LocationImage format
     const locationImages: LocationImage[] = images.map(img => ({
       id: img.id,

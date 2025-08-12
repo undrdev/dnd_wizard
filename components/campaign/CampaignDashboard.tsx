@@ -125,7 +125,6 @@ export function CampaignDashboard() {
           <div className="mt-4">
             <PricingInfo variant="compact" />
           </div>
-          </div>
         </div>
 
         {/* Location Browser area */}
