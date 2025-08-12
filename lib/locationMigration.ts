@@ -172,7 +172,7 @@ export function migrateLocation(oldLocation: any): EnhancedLocation {
 /**
  * Migrate an array of locations from old format to new enhanced format
  */
-export function migrateLocations(oldLocations: any[]): EnhancedLocation[] {
+export function migrateLocations(oldLocations: Location[]): EnhancedLocation[] {
   return oldLocations.map(migrateLocation);
 }
 

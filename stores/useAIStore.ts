@@ -104,7 +104,7 @@ export const useAIStore = create<AIStore>()(
         if (keys.openai) {
           console.log('🔍 AI Store: Found OpenAI keys');
           // Type-safe conversion for OpenAI models
-          const openaiModel = keys.openai.model as 'gpt-4o' | 'gpt-4o-mini' | 'gpt-4-turbo' | 'gpt-3.5-turbo';
+          const openaiModel = keys.openai.model as 'gpt-4o' | 'gpt-4o-mini' | 'gpt-4-turbo' | 'gpt-4-turbo-preview' | 'gpt-3.5-turbo' | 'gpt-3.5-turbo-16k';
           providers.openai = {
             apiKey: keys.openai.apiKey,
             model: openaiModel
@@ -113,7 +113,7 @@ export const useAIStore = create<AIStore>()(
         if (keys.anthropic) {
           console.log('🔍 AI Store: Found Anthropic keys');
           // Type-safe conversion for Anthropic models
-          const anthropicModel = keys.anthropic.model as 'claude-3-5-sonnet-20241022' | 'claude-3-5-haiku-20241022' | 'claude-3-opus-20240229';
+          const anthropicModel = keys.anthropic.model as 'claude-3-opus-20240229' | 'claude-3-sonnet-20240229' | 'claude-3-haiku-20240307';
           providers.anthropic = {
             apiKey: keys.anthropic.apiKey,
             model: anthropicModel

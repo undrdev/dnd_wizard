@@ -13,9 +13,9 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
   const { providers, currentProvider, setOpenAIConfig, setAnthropicConfig, setCurrentProvider, saveAPIKeysToFirebase } = useAIStore();
   
   const [openaiApiKey, setOpenaiApiKey] = useState(providers.openai?.apiKey || '');
-  const [openaiModel, setOpenaiModel] = useState(providers.openai?.model || 'gpt-4o');
+  const [openaiModel, setOpenaiModel] = useState(providers.openai?.model || 'gpt-4o-mini');
   const [anthropicApiKey, setAnthropicApiKey] = useState(providers.anthropic?.apiKey || '');
-  const [anthropicModel, setAnthropicModel] = useState(providers.anthropic?.model || 'claude-3-5-sonnet-20241022');
+  const [anthropicModel, setAnthropicModel] = useState(providers.anthropic?.model || 'claude-3-haiku-20240307');
   const [selectedProvider, setSelectedProvider] = useState<'openai' | 'anthropic'>(currentProvider || 'openai');
   
   const [showOpenaiKey, setShowOpenaiKey] = useState(false);
@@ -61,16 +61,18 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
   };
 
   const openaiModels = [
-    { value: 'gpt-4o', label: 'GPT-4o' },
-    { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
-    { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
-    { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
+    { value: 'gpt-4o', label: 'GPT-4o (Latest & Most Capable)', group: 'Premium' },
+    { value: 'gpt-4o-mini', label: 'GPT-4o Mini (Fast & Cost-Effective)', group: 'Standard' },
+    { value: 'gpt-4-turbo', label: 'GPT-4 Turbo (Balanced)', group: 'Premium' },
+    { value: 'gpt-4-turbo-preview', label: 'GPT-4 Turbo Preview (Latest Features)', group: 'Premium' },
+    { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo (Budget)', group: 'Budget' },
+    { value: 'gpt-3.5-turbo-16k', label: 'GPT-3.5 Turbo 16K (Long Context)', group: 'Budget' },
   ];
 
   const anthropicModels = [
-    { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
-    { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku' },
-    { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus' },
+    { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus (Most Intelligent)', group: 'Premium' },
+    { value: 'claude-3-sonnet-20240229', label: 'Claude 3 Sonnet (Balanced)', group: 'Standard' },
+    { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku (Fast & Cost-Effective)', group: 'Budget' },
   ];
 
   return (
@@ -162,11 +164,27 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
                   onChange={(e) => setOpenaiModel(e.target.value as any)}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 >
-                  {openaiModels.map((model) => (
-                    <option key={model.value} value={model.value}>
-                      {model.label}
-                    </option>
-                  ))}
+                  <optgroup label="Premium Models (Best Quality)">
+                    {openaiModels.filter(m => m.group === 'Premium').map((model) => (
+                      <option key={model.value} value={model.value}>
+                        {model.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Standard Models (Good Balance)">
+                    {openaiModels.filter(m => m.group === 'Standard').map((model) => (
+                      <option key={model.value} value={model.value}>
+                        {model.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Budget Models (Cost-Effective)">
+                    {openaiModels.filter(m => m.group === 'Budget').map((model) => (
+                      <option key={model.value} value={model.value}>
+                        {model.label}
+                      </option>
+                    ))}
+                  </optgroup>
                 </select>
               </div>
             </div>
@@ -212,12 +230,43 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
                   onChange={(e) => setAnthropicModel(e.target.value as any)}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 >
-                  {anthropicModels.map((model) => (
-                    <option key={model.value} value={model.value}>
-                      {model.label}
-                    </option>
-                  ))}
+                  <optgroup label="Premium Models (Best Quality)">
+                    {anthropicModels.filter(m => m.group === 'Premium').map((model) => (
+                      <option key={model.value} value={model.value}>
+                        {model.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Standard Models (Good Balance)">
+                    {anthropicModels.filter(m => m.group === 'Standard').map((model) => (
+                      <option key={model.value} value={model.value}>
+                        {model.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Budget Models (Cost-Effective)">
+                    {anthropicModels.filter(m => m.group === 'Budget').map((model) => (
+                      <option key={model.value} value={model.value}>
+                        {model.label}
+                      </option>
+                    ))}
+                  </optgroup>
                 </select>
+              </div>
+            </div>
+
+            {/* Model Selection Guide */}
+            <div className="bg-green-50 border border-green-200 rounded-md p-3">
+              <h4 className="text-sm font-medium text-green-800 mb-2">Model Selection Guide</h4>
+              <div className="text-xs text-green-700 space-y-1">
+                <p><strong>Premium:</strong> Best quality, higher cost - Use for complex creative tasks</p>
+                <p><strong>Standard:</strong> Good balance of quality and cost - Recommended for most use cases</p>
+                <p><strong>Budget:</strong> Cost-effective, good for simple tasks and testing</p>
+                <p className="mt-2 text-xs text-gray-600">
+                  <strong>Cost Reference:</strong> Based on current pricing from 
+                  <a href="https://platform.openai.com/docs/pricing" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">OpenAI</a> and 
+                  <a href="https://www.anthropic.com/pricing#api" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">Anthropic</a>
+                </p>
               </div>
             </div>
 
