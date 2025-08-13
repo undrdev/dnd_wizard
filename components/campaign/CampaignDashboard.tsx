@@ -7,7 +7,8 @@ import { LocationBrowser } from '@/components/location/LocationBrowser';
 import { PricingInfo } from '@/components/ui/PricingInfo';
 import { AICampaignPreview } from './AICampaignPreview';
 import { migrateLocations } from '@/lib/locationMigration';
-import { CloudArrowUpIcon, CloudArrowDownIcon } from '@heroicons/react/24/outline';
+import { CloudArrowUpIcon, CloudArrowDownIcon, PlusIcon, UserIcon, ClipboardDocumentListIcon, MapPinIcon } from '@heroicons/react/24/outline';
+import { FormSelector } from '../forms/FormSelector';
 
 
 export function CampaignDashboard() {
@@ -150,6 +151,8 @@ export function CampaignDashboard() {
 function CampaignActions() {
   const { currentCampaign } = useAppStore();
   const [showImportExportModal, setShowImportExportModal] = useState(false);
+  const [showFormSelector, setShowFormSelector] = useState(false);
+  const [formType, setFormType] = useState<'npc' | 'quest' | 'location' | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingCloud, setIsLoadingCloud] = useState(false);
 
@@ -181,9 +184,41 @@ function CampaignActions() {
     }
   };
 
+  const handleCreateItem = (type: 'npc' | 'quest' | 'location') => {
+    setFormType(type);
+    setShowFormSelector(true);
+  };
+
   return (
     <>
       <div className="flex items-center space-x-2">
+        {/* Creation Buttons */}
+        <div className="flex items-center space-x-1">
+          <button
+            onClick={() => handleCreateItem('npc')}
+            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <UserIcon className="w-4 h-4 mr-1" />
+            NPC
+          </button>
+          <button
+            onClick={() => handleCreateItem('quest')}
+            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+          >
+            <ClipboardDocumentListIcon className="w-4 h-4 mr-1" />
+            Quest
+          </button>
+          <button
+            onClick={() => handleCreateItem('location')}
+            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          >
+            <MapPinIcon className="w-4 h-4 mr-1" />
+            Location
+          </button>
+        </div>
+
+        <div className="w-px h-6 bg-gray-300"></div>
+
         <button
           onClick={handleLoadFromCloud}
           disabled={isLoadingCloud}
@@ -209,6 +244,21 @@ function CampaignActions() {
           📤 Import/Export
         </button>
       </div>
+
+      {/* Form Selector Modal */}
+      {showFormSelector && formType && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="max-w-2xl mx-4 w-full">
+            <FormSelector
+              type={formType}
+              onClose={() => {
+                setShowFormSelector(false);
+                setFormType(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       <ImportExportModal
         isOpen={showImportExportModal}
