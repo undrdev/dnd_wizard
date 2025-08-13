@@ -55,12 +55,8 @@ export function FormSelector({ type, onClose, className = '' }: FormSelectorProp
       });
       onClose();
     } catch (error) {
-      addToast({
-        type: 'error',
-        title: 'AI Generation Failed',
-        message: 'Failed to start AI generation. Please try again.',
-        duration: 5000
-      });
+      // Error handling is done in the useAI hook, no need for additional error toasts here
+      console.error('FormSelector: Error in AI generation:', error);
     } finally {
       setIsGenerating(false);
     }

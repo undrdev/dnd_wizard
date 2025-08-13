@@ -128,13 +128,14 @@ export function useAI(): UseAIReturn {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
       
-      const errorResponse: AIMessage = {
-        role: 'assistant',
-        content: `Error: ${errorMessage}`,
-        timestamp: new Date(),
-      };
+      // Don't add error message to conversation history - let the toast handle error display
+      // const errorResponse: AIMessage = {
+      //   role: 'assistant',
+      //   content: `Error: ${errorMessage}`,
+      //   timestamp: new Date(),
+      // };
+      // addMessage(errorResponse);
       
-      addMessage(errorResponse);
       throw err;
     } finally {
       setIsGenerating(false);
