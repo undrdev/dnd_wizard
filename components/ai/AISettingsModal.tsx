@@ -20,7 +20,7 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
   );
   const [model, setModel] = useState(
     selectedProvider === 'openai' 
-      ? (providers.openai?.model || 'gpt-4o-mini') 
+      ? (providers.openai?.model || 'gpt-5') 
       : (providers.anthropic?.model || 'claude-3-haiku-20240307')
   );
   
@@ -33,7 +33,7 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
     // Update API key field
     if (newProvider === 'openai') {
       setApiKey(providers.openai?.apiKey || '');
-      setModel(providers.openai?.model || 'gpt-4o-mini');
+      setModel(providers.openai?.model || 'gpt-5');
     } else {
       setApiKey(providers.anthropic?.apiKey || '');
       setModel(providers.anthropic?.model || 'claude-3-haiku-20240307');
@@ -80,10 +80,12 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
   };
 
   const openaiModels = [
-    { value: 'gpt-4o', label: 'GPT-4o (Latest & Most Capable)', group: 'Premium' },
+    { value: 'gpt-5', label: 'GPT-5 (Latest & Most Capable)', group: 'Premium' },
+    { value: 'gpt-4o', label: 'GPT-4o (Fast & Capable)', group: 'Premium' },
     { value: 'gpt-4o-mini', label: 'GPT-4o Mini (Fast & Cost-Effective)', group: 'Standard' },
     { value: 'gpt-4-turbo', label: 'GPT-4 Turbo (Balanced)', group: 'Premium' },
     { value: 'gpt-4-turbo-preview', label: 'GPT-4 Turbo Preview (Latest Features)', group: 'Premium' },
+    { value: 'gpt-4', label: 'GPT-4 (Original)', group: 'Premium' },
     { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo (Budget)', group: 'Budget' },
     { value: 'gpt-3.5-turbo-16k', label: 'GPT-3.5 Turbo 16K (Long Context)', group: 'Budget' },
   ];
