@@ -269,14 +269,6 @@ export async function generateContent(req: Request, res: Response) {
       }
     }
     
-    if (aiError && aiError.type) {
-      return res.status(200).json({
-        success: false,
-        error: aiError,
-        message: aiError.userMessage
-      });
-    }
-    
     // Log error usage if we have campaign and user info
     if (campaignId && userId) {
       try {
@@ -299,7 +291,7 @@ export async function generateContent(req: Request, res: Response) {
           responseLength: 0,
           success: false,
           errorType: aiError?.type || 'unknown',
-          errorMessage: aiError?.message || 'Unknown error',
+          errorMessage: aiError?.message || (error instanceof Error ? error.message : 'Unknown error'),
           processingTimeMs,
           createdAt: FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp(),
@@ -312,11 +304,28 @@ export async function generateContent(req: Request, res: Response) {
       }
     }
     
-    // Fallback to generic error
-    return res.status(500).json({ 
+    // Return structured error response instead of 500
+    if (aiError && aiError.type) {
+      return res.status(200).json({
+        success: false,
+        error: aiError,
+        message: aiError.userMessage || aiError.message
+      });
+    }
+    
+    // Create a structured error for unknown errors
+    const structuredError: AIError = {
+      type: 'unknown',
+      message: error instanceof Error ? error.message : 'Unknown error occurred',
+      userMessage: 'An unexpected error occurred while processing your request. Please try again.',
+      provider: (provider as 'openai' | 'anthropic' | 'unknown') || 'unknown',
+      retryable: true
+    };
+    
+    return res.status(200).json({
       success: false,
-      error: 'Internal server error',
-      message: 'An unexpected error occurred. Please try again.'
+      error: structuredError,
+      message: structuredError.userMessage
     });
   }
 }

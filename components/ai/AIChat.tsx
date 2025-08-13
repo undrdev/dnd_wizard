@@ -35,9 +35,10 @@ export function AIChat() {
   const [inputHistory, setInputHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const lastErrorRef = useRef<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   const hasLoadedKeys = useRef(false);
 
   const { getCurrentCampaignData } = useAppStore();
@@ -83,8 +84,9 @@ export function AIChat() {
   }, [loadAPIKeysFromFirebase, isLoadingKeys]);
 
   useEffect(() => {
-    if (error) {
+    if (error && error !== lastErrorRef.current) {
       console.log('🔍 AIChat: Error detected:', error);
+      lastErrorRef.current = error;
       
       // Show error toast
       addToast({
@@ -102,6 +104,7 @@ export function AIChat() {
       const timer = setTimeout(() => {
         console.log('🔍 AIChat: Auto-clearing error');
         clearError();
+        lastErrorRef.current = null;
       }, 8000);
       return () => clearTimeout(timer);
     }
@@ -174,16 +177,9 @@ export function AIChat() {
       console.log('🔍 AIChat: Calling processCommand');
       await processCommand(command);
       console.log('✅ AIChat: Command processed successfully');
-      
-      // Show success toast for successful commands
-      addToast({
-        type: 'success',
-        title: 'Command Processed',
-        message: 'Your AI command has been processed successfully.',
-        duration: 3000
-      });
     } catch (error) {
       console.error('❌ AIChat: Error processing command:', error);
+      // Error handling is done in the useAI hook, no need to show additional toasts here
     }
   };
 
