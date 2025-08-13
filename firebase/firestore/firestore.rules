@@ -35,5 +35,35 @@ service cloud.firestore {
       allow read, write: if isOwner(get(/databases/$(database)/documents/campaigns/$(campaignId)).data.ownerId);
       allow create: if isOwner(get(/databases/$(database)/documents/campaigns/$(campaignId)).data.ownerId);
     }
+
+    // AI Usage Logs - users can only access their own usage logs
+    match /aiUsageLogs/{logId} {
+      allow read, write: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+    }
+
+    // User Settings - users can only access their own settings
+    match /userSettings/{userId} {
+      allow read, write: if isOwner(userId);
+      allow create: if isOwner(userId);
+    }
+
+    // Content Templates - users can only access their own templates
+    match /contentTemplates/{templateId} {
+      allow read, write: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+    }
+
+    // Backups - users can only access their own backups
+    match /backups/{backupId} {
+      allow read, write: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+    }
+
+    // Backup Data - users can only access their own backup data
+    match /backup_data/{backupId} {
+      allow read, write: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+    }
   }
 }
