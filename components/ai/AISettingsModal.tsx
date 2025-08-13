@@ -12,24 +12,44 @@ interface AISettingsModalProps {
 export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
   const { providers, currentProvider, setOpenAIConfig, setAnthropicConfig, setCurrentProvider, saveAPIKeysToFirebase } = useAIStore();
   
-  const [openaiApiKey, setOpenaiApiKey] = useState(providers.openai?.apiKey || '');
-  const [openaiModel, setOpenaiModel] = useState(providers.openai?.model || 'gpt-4o-mini');
-  const [anthropicApiKey, setAnthropicApiKey] = useState(providers.anthropic?.apiKey || '');
-  const [anthropicModel, setAnthropicModel] = useState(providers.anthropic?.model || 'claude-3-haiku-20240307');
   const [selectedProvider, setSelectedProvider] = useState<'openai' | 'anthropic'>(currentProvider || 'openai');
+  const [apiKey, setApiKey] = useState(
+    selectedProvider === 'openai' 
+      ? (providers.openai?.apiKey || '') 
+      : (providers.anthropic?.apiKey || '')
+  );
+  const [model, setModel] = useState(
+    selectedProvider === 'openai' 
+      ? (providers.openai?.model || 'gpt-4o-mini') 
+      : (providers.anthropic?.model || 'claude-3-haiku-20240307')
+  );
   
-  const [showOpenaiKey, setShowOpenaiKey] = useState(false);
-  const [showAnthropicKey, setShowAnthropicKey] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
+
+  // Update API key and model when provider changes
+  const handleProviderChange = (newProvider: 'openai' | 'anthropic') => {
+    setSelectedProvider(newProvider);
+    
+    // Update API key field
+    if (newProvider === 'openai') {
+      setApiKey(providers.openai?.apiKey || '');
+      setModel(providers.openai?.model || 'gpt-4o-mini');
+    } else {
+      setApiKey(providers.anthropic?.apiKey || '');
+      setModel(providers.anthropic?.model || 'claude-3-haiku-20240307');
+    }
+  };
 
   const handleSave = async () => {
-    // Save OpenAI config if provided
-    if (openaiApiKey && openaiModel) {
-      setOpenAIConfig({ apiKey: openaiApiKey, model: openaiModel });
-    }
-
-    // Save Anthropic config if provided
-    if (anthropicApiKey && anthropicModel) {
-      setAnthropicConfig({ apiKey: anthropicApiKey, model: anthropicModel });
+    // Save config for the selected provider
+    if (selectedProvider === 'openai') {
+      if (apiKey && model) {
+        setOpenAIConfig({ apiKey, model });
+      }
+    } else {
+      if (apiKey && model) {
+        setAnthropicConfig({ apiKey, model });
+      }
     }
 
     // Set current provider
@@ -37,11 +57,10 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
 
     // Update AI service config
     const config: Record<string, { apiKey: string; model: string }> = {};
-    if (openaiApiKey && openaiModel) {
-      config.openai = { apiKey: openaiApiKey, model: openaiModel };
-    }
-    if (anthropicApiKey && anthropicModel) {
-      config.anthropic = { apiKey: anthropicApiKey, model: anthropicModel };
+    if (selectedProvider === 'openai' && apiKey && model) {
+      config.openai = { apiKey, model };
+    } else if (selectedProvider === 'anthropic' && apiKey && model) {
+      config.anthropic = { apiKey, model };
     }
     aiService.setConfig(config);
 
@@ -75,6 +94,9 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
     { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku (Fast & Cost-Effective)', group: 'Budget' },
   ];
 
+  const currentModels = selectedProvider === 'openai' ? openaiModels : anthropicModels;
+  const apiKeyPlaceholder = selectedProvider === 'openai' ? 'sk-...' : 'sk-ant-...';
+
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-[9999]">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
@@ -94,152 +116,96 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
           </div>
 
           <div className="p-6 space-y-6">
-            {/* Provider Selection */}
+            {/* Provider Toggle */}
             <div>
-              <label htmlFor="provider-select" className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
                 AI Provider
               </label>
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => handleProviderChange('openai')}
+                  className={`flex-1 py-2 px-4 rounded-md border-2 transition-colors ${
+                    selectedProvider === 'openai'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                >
+                  <div className="text-sm font-medium">OpenAI</div>
+                </button>
+                <button
+                  onClick={() => handleProviderChange('anthropic')}
+                  className={`flex-1 py-2 px-4 rounded-md border-2 transition-colors ${
+                    selectedProvider === 'anthropic'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                >
+                  <div className="text-sm font-medium">Anthropic</div>
+                </button>
+              </div>
+            </div>
+
+            {/* API Key Input */}
+            <div>
+              <label htmlFor="api-key" className="block text-sm font-medium text-gray-700">
+                API Key
+              </label>
+              <div className="mt-1 relative">
+                <input
+                  id="api-key"
+                  type={showApiKey ? 'text' : 'password'}
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  placeholder={apiKeyPlaceholder}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                >
+                  {showApiKey ? (
+                    <EyeSlashIcon className="h-4 w-4 text-gray-400" />
+                  ) : (
+                    <EyeIcon className="h-4 w-4 text-gray-400" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Model Selection */}
+            <div>
+              <label htmlFor="model-select" className="block text-sm font-medium text-gray-700">
+                Model
+              </label>
               <select
-                id="provider-select"
-                value={selectedProvider}
-                onChange={(e) => setSelectedProvider(e.target.value as 'openai' | 'anthropic')}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                id="model-select"
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
               >
-                <option value="openai">OpenAI</option>
-                <option value="anthropic">Anthropic</option>
+                <optgroup label="Premium Models (Best Quality)">
+                  {currentModels.filter(m => m.group === 'Premium').map((model) => (
+                    <option key={model.value} value={model.value}>
+                      {model.label}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Standard Models (Good Balance)">
+                  {currentModels.filter(m => m.group === 'Standard').map((model) => (
+                    <option key={model.value} value={model.value}>
+                      {model.label}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Budget Models (Cost-Effective)">
+                  {currentModels.filter(m => m.group === 'Budget').map((model) => (
+                    <option key={model.value} value={model.value}>
+                      {model.label}
+                    </option>
+                  ))}
+                </optgroup>
               </select>
-            </div>
-
-            {/* OpenAI Configuration */}
-            <div className="space-y-4">
-              <h3 className="text-md font-medium text-gray-900">OpenAI Configuration</h3>
-              
-              <div>
-                <label htmlFor="openai-key" className="block text-sm font-medium text-gray-700">
-                  API Key
-                </label>
-                <div className="mt-1 relative">
-                  <input
-                    id="openai-key"
-                    type={showOpenaiKey ? 'text' : 'password'}
-                    value={openaiApiKey}
-                    onChange={(e) => setOpenaiApiKey(e.target.value)}
-                    className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                    placeholder="sk-..."
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowOpenaiKey(!showOpenaiKey)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  >
-                    {showOpenaiKey ? (
-                      <EyeSlashIcon className="h-4 w-4 text-gray-400" />
-                    ) : (
-                      <EyeIcon className="h-4 w-4 text-gray-400" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="openai-model" className="block text-sm font-medium text-gray-700">
-                  Model
-                </label>
-                <select
-                  id="openai-model"
-                  value={openaiModel}
-                  onChange={(e) => setOpenaiModel(e.target.value as any)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                >
-                  <optgroup label="Premium Models (Best Quality)">
-                    {openaiModels.filter(m => m.group === 'Premium').map((model) => (
-                      <option key={model.value} value={model.value}>
-                        {model.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Standard Models (Good Balance)">
-                    {openaiModels.filter(m => m.group === 'Standard').map((model) => (
-                      <option key={model.value} value={model.value}>
-                        {model.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Budget Models (Cost-Effective)">
-                    {openaiModels.filter(m => m.group === 'Budget').map((model) => (
-                      <option key={model.value} value={model.value}>
-                        {model.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                </select>
-              </div>
-            </div>
-
-            {/* Anthropic Configuration */}
-            <div className="space-y-4">
-              <h3 className="text-md font-medium text-gray-900">Anthropic Configuration</h3>
-              
-              <div>
-                <label htmlFor="anthropic-key" className="block text-sm font-medium text-gray-700">
-                  API Key
-                </label>
-                <div className="mt-1 relative">
-                  <input
-                    id="anthropic-key"
-                    type={showAnthropicKey ? 'text' : 'password'}
-                    value={anthropicApiKey}
-                    onChange={(e) => setAnthropicApiKey(e.target.value)}
-                    className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                    placeholder="sk-ant-..."
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowAnthropicKey(!showAnthropicKey)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  >
-                    {showAnthropicKey ? (
-                      <EyeSlashIcon className="h-4 w-4 text-gray-400" />
-                    ) : (
-                      <EyeIcon className="h-4 w-4 text-gray-400" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="anthropic-model" className="block text-sm font-medium text-gray-700">
-                  Model
-                </label>
-                <select
-                  id="anthropic-model"
-                  value={anthropicModel}
-                  onChange={(e) => setAnthropicModel(e.target.value as any)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                >
-                  <optgroup label="Premium Models (Best Quality)">
-                    {anthropicModels.filter(m => m.group === 'Premium').map((model) => (
-                      <option key={model.value} value={model.value}>
-                        {model.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Standard Models (Good Balance)">
-                    {anthropicModels.filter(m => m.group === 'Standard').map((model) => (
-                      <option key={model.value} value={model.value}>
-                        {model.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Budget Models (Cost-Effective)">
-                    {anthropicModels.filter(m => m.group === 'Budget').map((model) => (
-                      <option key={model.value} value={model.value}>
-                        {model.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                </select>
-              </div>
             </div>
 
             {/* Model Selection Guide */}
