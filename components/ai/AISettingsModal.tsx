@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Dialog } from '@headlessui/react';
-import { XMarkIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, EyeIcon, EyeSlashIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
 import { useAIStore } from '@/stores/useAIStore';
 import { aiService } from '@/lib/ai';
 
@@ -96,31 +96,18 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
           <div className="p-6 space-y-6">
             {/* Provider Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label htmlFor="provider-select" className="block text-sm font-medium text-gray-700 mb-2">
                 AI Provider
               </label>
-              <div className="space-y-2">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    value="openai"
-                    checked={selectedProvider === 'openai'}
-                    onChange={(e) => setSelectedProvider(e.target.value as 'openai')}
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-900">OpenAI</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    value="anthropic"
-                    checked={selectedProvider === 'anthropic'}
-                    onChange={(e) => setSelectedProvider(e.target.value as 'anthropic')}
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-900">Anthropic</span>
-                </label>
-              </div>
+              <select
+                id="provider-select"
+                value={selectedProvider}
+                onChange={(e) => setSelectedProvider(e.target.value as 'openai' | 'anthropic')}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+              >
+                <option value="openai">OpenAI</option>
+                <option value="anthropic">Anthropic</option>
+              </select>
             </div>
 
             {/* OpenAI Configuration */}
@@ -274,9 +261,8 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
                     rel="noopener noreferrer" 
                     className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline"
                   >
-                    <span>🔗</span>
-                    <span className="ml-1">OpenAI Pricing</span>
-                    <span className="ml-1 text-gray-500">(opens in new tab)</span>
+                    <span>OpenAI Pricing</span>
+                    <ArrowTopRightOnSquareIcon className="h-3 w-3 ml-1" />
                   </a>
                   <a 
                     href="https://www.anthropic.com/pricing#api" 
@@ -284,9 +270,8 @@ export function AISettingsModal({ isOpen, onClose }: AISettingsModalProps) {
                     rel="noopener noreferrer" 
                     className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline"
                   >
-                    <span>🔗</span>
-                    <span className="ml-1">Anthropic Pricing</span>
-                    <span className="ml-1 text-gray-500">(opens in new tab)</span>
+                    <span>Anthropic Pricing</span>
+                    <ArrowTopRightOnSquareIcon className="h-3 w-3 ml-1" />
                   </a>
                 </div>
               </div>
