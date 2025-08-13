@@ -4,68 +4,68 @@
       "collectionGroup": "aiUsageLogs",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
+        { "fieldPath": 'userId', "order": "ASCENDING" },
+        { "fieldPath": 'createdAt', "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "aiUsageLogs",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "campaignId", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
+        { "fieldPath": 'campaignId', "order": "ASCENDING" },
+        { "fieldPath": 'createdAt', "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "aiUsageLogs",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "commandType", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
+        { "fieldPath": 'userId', "order": "ASCENDING" },
+        { "fieldPath": 'commandType', "order": "ASCENDING" },
+        { "fieldPath": 'createdAt', "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "aiUsageLogs",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "provider", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
+        { "fieldPath": 'userId', "order": "ASCENDING" },
+        { "fieldPath": 'provider', "order": "ASCENDING" },
+        { "fieldPath": 'createdAt', "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "aiUsageLogs",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "success", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
+        { "fieldPath": 'userId', "order": "ASCENDING" },
+        { "fieldPath": 'success', "order": "ASCENDING" },
+        { "fieldPath": 'createdAt', "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "aiUsageLogs",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "userFeedback", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
+        { "fieldPath": 'userId', "order": "ASCENDING" },
+        { "fieldPath": 'userFeedback', "order": "ASCENDING" },
+        { "fieldPath": 'createdAt', "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "aiUsageLogs",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "ASCENDING" }
+        { "fieldPath": 'userId', "order": "ASCENDING" },
+        { "fieldPath": 'createdAt', "order": "ASCENDING" }
       ]
     },
     {
       "collectionGroup": "aiUsageLogs",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
+        { "fieldPath": 'userId', "order": "ASCENDING" },
+        { "fieldPath": 'createdAt', "order": "DESCENDING" }
       ]
     }
   ],
